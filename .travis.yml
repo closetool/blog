@@ -16,10 +16,12 @@ before_install:
     - sudo apt-get -y install openjdk-8-jdk
     - sudo docker swarm init
 
+before_script:
+    - chmod 0755 ./support.sh ./springcloud.sh
+
 script: 
     - ./support.sh
     - ./springcloud.sh 
-    - go test ./...
 
 after_success: 
     - sudo docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver
