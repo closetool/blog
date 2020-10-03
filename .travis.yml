@@ -1,15 +1,22 @@
 language: golang
 
-sudo: required
-
+git:
+    depth: false
 services: 
     - docker
 
 go: 
     - "1.13.x"
 
+dist: xenial
+sudo: required
+addons:
+    apt:
+        update
+
 before_install:
-    - docker swarm init
+    - sudo apt-get -y install openjdk-8-jdk
+    - sudo docker swarm init
 
 script: 
     - ./support.sh
@@ -17,6 +24,6 @@ script:
     - go test ./...
 
 after_success: 
-    - docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver
-    - docker login --username=马桶拔子k -p $aliyun_docker_password registry.cn-hangzhou.aliyuncs.com
-    - docker push registry.cn-hangzhou.aliyuncs.com/closetool/configserver
+    - sudo docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver
+    - sudo docker login --username=马桶拔子k -p $aliyun_docker_password registry.cn-hangzhou.aliyuncs.com
+    - sudo docker push registry.cn-hangzhou.aliyuncs.com/closetool/configserver
