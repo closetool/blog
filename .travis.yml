@@ -1,4 +1,4 @@
-language: golang
+language: go
 
 git:
     depth: false
@@ -17,6 +17,8 @@ before_install:
     - sudo docker swarm init
 
 before_script:
+    - sudo docker network rm my_network
+    - sudo docker network create my_network
     - chmod 0755 ./support.sh ./springcloud.sh
 
 script: 
