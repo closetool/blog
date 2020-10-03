@@ -21,8 +21,8 @@ before_script:
     - chmod 0755 ./support.sh ./springcloud.sh
 
 script: 
-    - ./support.sh
-    - ./springcloud.sh 
+    - sudo ./support.sh
+    - sudo ./springcloud.sh 
 
 after_success: 
     - sudo docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver
