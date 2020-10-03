@@ -14,10 +14,10 @@ sudo: required
 before_install:
     - sudo apt-get update
     - sudo apt-get -y install openjdk-8-jdk
-    - sudo docker swarm init
+    - docker swarm init
 
 before_script:
-    - sudo docker network create my_network
+    - docker network create -d overlay my_network
     - chmod 0755 ./support.sh ./springcloud.sh
 
 script: 
@@ -25,6 +25,6 @@ script:
     - sudo ./springcloud.sh 
 
 after_success: 
-    - sudo docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver
-    - sudo docker login --username=马桶拔子k -p $aliyun_docker_password registry.cn-hangzhou.aliyuncs.com
-    - sudo docker push registry.cn-hangzhou.aliyuncs.com/closetool/configserver
+    - docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver
+    - docker login --username=马桶拔子k -p $aliyun_docker_password registry.cn-hangzhou.aliyuncs.com
+    - docker push registry.cn-hangzhou.aliyuncs.com/closetool/configserver
