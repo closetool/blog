@@ -1,5 +1,10 @@
 language: go
 
+env:
+    global:
+        - secure: "udf+KVo6xmAwSkL3Hk8ZbkiYVpH1Wf/OiwZ5K3Zrb9MjyG97wPg2Owt+44ujG6Pi3y7R6JBig6DgI3XNlr2HZXjyWt7Oj/2QaA/PlgJydqQiLq9x4k4ltCzJgslTm42c5vA09+Ru0GmqaiIPRrgMw0N1iWa+5404DcxdVp32PjvMifbrvD4t4jsDvoLkqw4uLHnTaSiu1NsDKG3FQWtbjTVSjXAs5HvoM8Is2lO39sbfT5bJDwJsKkZf/LHS2eKjD/WYRX0PwdiCytIAMbXoKxtWX8o3GoXNCRTDyMq259+zfehoMLDguoo9UhnypAKAW/qbQhDgQiYRDwkhxKS5Nscy9Tc3n19zK/v2hMqg+sf7ZeQjw9ruavCALMwoG8dGdlLRtfxqnCDYA3tr6C8uNthbf9OAtOu8YVnIBqTPRr/fZa/8EgXMmpE+z4NdbIatSjX4fYppUbhF54cD5tEzdpIdCZtIrpvvL60jRnXvnMjZPka1aF2yWbiC1jCHe538GLTejUqxy+8Zl68aR4JGjztqbsqs1A75WAH55BB7pkYu6dlgmwzO5ESv1fJZO/Ev09PX81TyfRwDavjvbAbh9EBhUfd2QxjRoMIcy72vvjdiIYsyPok622Eb5hJX7a0wjffC9x+1IxFgKpBqVGuBt9NxcqPeg8sUbWncXRaBqvw="
+        - secure: "Swj2tXeIF+q6o/pUZR2LKYVFRjNCuHjYaRNotgTq1xTmomMFXEboyhzzQHWG7j/pRXZmOPZWR31F8fEdUDv4BiEyTPRjGuXmt11JY9NY6vUkk3hCoyDlf9bKZtGxsDKL6gMidxZO6JEU1cSCrrAsH3O10woifKpV9aAbsHkvdG/lqYM5LQgN2dbV6rXDJAf8L0l76MHm+mzAxBuD1OHO+Zuh+lSw86Kb3FjpWmVZQdI6sEvX4V4LZ5FVtaNzjTBXhDOtQqP9iKwXauQQ21A7JepXnB2v/E4sYbPlV/v/w0pmD0fC5p34c+Map94K6JvkWd0C1DlJXs+RfNJqK/pYXBIKwwcZoehxS5bPBE52K0jQK1dIIhvouZuQrzsz57ODxRsCDGMZg5Cu0l2P/2DT2MkK0KGMrM0tUvv7GOgRqoceVAGICl4sptFudyOWSklIK/3O39a4GSxBIfANxXGUigDpHXZnVsVNmeVS0Ho3byNKcU5altOn30dCnVytJdYDkrl/IT8oqNFnNJWFgY/lcSM3Ith2hnn2lnpuuF4msqVdnPqTt4H654OLQ90Fi9+PD5TJI08nvGRDhmfDU3VEMaWPiqNbsLptlesy2mDbVFIYo+2MYOKiQqtLu9iaoFrmgO99nNRxEQ5Ak/zMJ3dGtyYF3FXw+JbEIGuqmz2GHyc="
+
 git:
     depth: false
 services: 
@@ -7,6 +12,8 @@ services:
 
 go: 
     - "1.13.x"
+addons:
+    ssh_known_hosts: $server_ip
 
 dist: xenial
 sudo: required
