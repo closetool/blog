@@ -1,9 +1,9 @@
 package messaging
 
 import (
-        "github.com/streadway/amqp"
-        "fmt"
-        "log"
+	"fmt"
+	"github.com/streadway/amqp"
+	"log"
 )
 
 // Defines our interface for connecting and consuming messages.
@@ -67,9 +67,9 @@ func (m *MessagingClient) Publish(body []byte, exchangeName string, exchangeType
                 exchangeName, // sourceExchange
                 false, // noWait
                 nil, // arguments
-        );
+        )
 
-        err = ch.Publish(// Publishes a message onto the queue.
+	err = ch.Publish(// Publishes a message onto the queue.
                 exchangeName, // exchange
                 exchangeName, // routing key      q.Name
                 false, // mandatory
@@ -147,8 +147,8 @@ func (m *MessagingClient) Subscribe(exchangeName string, exchangeType string, co
                 exchangeName, // sourceExchange
                 false, // noWait
                 nil, // arguments
-        );
-        if err != nil {
+        )
+	if err != nil {
                 return fmt.Errorf("Queue Bind: %s", err)
         }
 
