@@ -1,0 +1,5 @@
+package tokenutils
+
+func CheckToken(){
+
+}
