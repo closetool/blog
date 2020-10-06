@@ -25,10 +25,10 @@ before_install:
 
 before_script:
     - docker network create -d overlay my_network
-    - chmod 0755 ./support.sh ./springcloud.sh
+    - chmod a+x ./support/config-server/gradlew
+    - chmod a+x ./support.sh ./springcloud.sh
 
 script: 
-    - sudo ./support.sh
     - go test ./...
 
 # after_success: 

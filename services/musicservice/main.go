@@ -30,7 +30,7 @@ func main() {
 
 	initConfig()
 
-	parseFlag()
+	//parseFlag()
 
 	config.LoadConfigurationFromBranch(
 		viper.GetString("config_server_url"),
@@ -96,7 +96,8 @@ func initConfig() {
 
 	viper.SetConfigType("yml")
 	viper.SetConfigName("musicservice")
-	configLoc := []string{"/etc/musicservice", "$HOME/.musicservice", "./"}
+	viper.SetConfigName("config")
+	configLoc := []string{"$HOME/config/", "/etc/musicservice/", "$HOME/.musicservice/", "./"}
 	for _, loc := range configLoc {
 		viper.AddConfigPath(loc)
 	}

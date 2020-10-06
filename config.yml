@@ -1,0 +1,3 @@
+config_server_url: http://39.108.114.242:8888
+profile: test
+branch: blog

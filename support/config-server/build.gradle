@@ -4,14 +4,14 @@ buildscript {
         springCloudVersion = 'Brixton.SR3'
     }
     repositories {
+        maven {
+            url 'https://maven.aliyun.com/repository/public/'
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/spring/'
+        }
         mavenCentral()
-	maven {
-		url 'https://maven.aliyun.com/repository/public/'
-	}
-	maven {
-		url 'https://maven.aliyun.com/repository/spring/'
-	}
-	mavenLocal()
+        mavenLocal()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")

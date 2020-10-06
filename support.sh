@@ -7,6 +7,7 @@ docker service create --name=rabbitmq --replicas=1 --network=my_network -p 1883:
 
 # Config Server
 cd support/config-server
+chmod a+x ./gradlew
 ./gradlew build
 cd ../..
 docker build -t closetool/configserver support/config-server/
