@@ -3,3 +3,4 @@
 *.jar
 build/
 *.log
+*-linux-amd64
