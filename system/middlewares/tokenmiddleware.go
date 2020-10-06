@@ -1,34 +1,34 @@
 package middlewares
 
 import (
-	"github.com/closetool/blog/system/blogerrors"
+	"net/http"
+
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/reply"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
-func UserToken(c *gin.Context){
+func UserToken(c *gin.Context) {
 	if !checkToken(c.GetHeader(constants.AUTH_HEADER)) {
 		noPrivilege(c)
-	}else{
+	} else {
 		c.Next()
 	}
 }
 
-func AdminToken(c *gin.Context){
+func AdminToken(c *gin.Context) {
 	if !checkToken(c.GetHeader(constants.AUTH_HEADER)) {
 		noPrivilege(c)
-	}else{
+	} else {
 
 	}
 }
 
-func noPrivilege(c *gin.Context){
-	c.AbortWithStatusJSON(http.StatusOK,reply.CreateWithError(blogerrors.ACCESS_NO_PRIVILEGE))
+func noPrivilege(c *gin.Context) {
+	c.AbortWithStatusJSON(http.StatusOK, reply.CreateWithError(reply.AccessNoPrivilege))
 }
 
-func checkToken(token string)bool{
+func checkToken(token string) bool {
 	if token == "" {
 		return false
 	}

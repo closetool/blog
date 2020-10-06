@@ -19,7 +19,7 @@ type springCloudConfig struct {
 }
 
 type propertySource struct {
-	URL    string            `json:"name"`
+	URL    string                 `json:"name"`
 	Source map[string]interface{} `json:"source"`
 }
 
