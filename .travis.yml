@@ -29,9 +29,9 @@ before_script:
 
 script: 
     - sudo ./support.sh
-    - sudo ./springcloud.sh 
+    - go test ./...
 
-after_success: 
-    - docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver
-    - docker login --username=马桶拔子k -p $aliyun_docker_password registry.cn-hangzhou.aliyuncs.com
-    - docker push registry.cn-hangzhou.aliyuncs.com/closetool/configserver
+# after_success: 
+#     - docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver
+#     - docker login --username=马桶拔子k -p $aliyun_docker_password registry.cn-hangzhou.aliyuncs.com
+#     - docker push registry.cn-hangzhou.aliyuncs.com/closetool/configserver
