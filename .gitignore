@@ -4,3 +4,4 @@
 build/
 *.log
 *-linux-amd64
+logs

@@ -3,28 +3,41 @@ package middlewares
 import (
 	"net/http"
 
+	"github.com/closetool/blog/services/userservice/models/po"
+	"github.com/closetool/blog/services/userservice/utils"
 	"github.com/closetool/blog/system/constants"
+	"github.com/closetool/blog/system/log"
 	"github.com/closetool/blog/system/reply"
 	"github.com/gin-gonic/gin"
 )
 
 func UserToken(c *gin.Context) {
-	if !checkToken(c.GetHeader(constants.AuthHeader)) {
-		noPrivilege(c)
-	} else {
+	utils.GetSession(c)
+	if _, exist := c.Get("session"); exist {
 		c.Next()
+	} else {
+		noPrivilege(c)
 	}
 }
 
 func AdminToken(c *gin.Context) {
-	if !checkToken(c.GetHeader(constants.AuthHeader)) {
-		noPrivilege(c)
-	} else {
-
+	utils.GetSession(c)
+	if value, exist := c.Get("session"); exist {
+		if user, ok := value.(*po.AuthUser); !ok {
+			noPrivilege(c)
+		} else {
+			if user.RoleId == constants.RoleAdmin {
+				c.Next()
+			} else {
+				noPrivilege(c)
+			}
+		}
 	}
 }
 
 func noPrivilege(c *gin.Context) {
+	value, _ := c.Get("session")
+	log.Logger.Debugf("no privilege %v\n", value)
 	c.AbortWithStatusJSON(http.StatusOK, reply.CreateWithErrorX(reply.AccessNoPrivilege))
 }
 

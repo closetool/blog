@@ -4,7 +4,11 @@ import (
 	"fmt"
 )
 
-func CreateWithError(errCode int) *Reply {
+func CreateWithError() *Reply {
+	return CreateWithErrorX(Error)
+}
+
+func CreateWithErrorX(errCode int) *Reply {
 	reply := createWithErrorFlag()
 	reply.ReplyCode = handleErrCode(errCode)
 	reply.Message = getMessage(errCode)
@@ -17,7 +21,7 @@ func createWithErrorFlag() *Reply {
 	}
 }
 
-func createWithSuccessFlag() *Reply {
+func CreateWithSuccess() *Reply {
 	return &Reply{
 		Success:   1,
 		ReplyCode: handleErrCode(Success),
@@ -34,7 +38,7 @@ func getMessage(errCode int) string {
 }
 
 func CreateWithModel(model interface{}) *Reply {
-	reply := createWithSuccessFlag()
+	reply := CreateWithSuccess()
 	reply.Model = model
 	return reply
 }

@@ -7,27 +7,28 @@ import (
 	"strings"
 
 	"github.com/closetool/blog/services/musicservice/models"
+	"github.com/closetool/blog/system/log"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 const (
-	MUSIC_PREFIX_URL = "https://music.163.com/api/playlist/detail?id="
-	PLAY_URL         = "https://music.163.com/song/media/outer/url?id="
+	MusicPrefixURL = "https://music.163.com/api/playlist/detail?id="
+	PlayURL        = "https://music.163.com/song/media/outer/url?id="
 )
 
 func GetPlaylist() (models.PlayList, error) {
-	playlistURL := fmt.Sprintf("%s%s", MUSIC_PREFIX_URL, viper.GetString("music_playlist_id"))
+	playlistURL := fmt.Sprintf("%s%s", MusicPrefixURL, viper.GetString("music_playlist_id"))
 	resp, err := http.Get(playlistURL)
 	if err != nil || resp.StatusCode != 200 {
-		logrus.Errorf("get music play list failed: %v", err)
+		log.Logger.Errorf("get music play list failed: %v", err)
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	playlistInfo, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logrus.Errorf("read response body from playlist failed: %v", err)
+		log.Logger.Errorf("read response body from playlist failed: %v", err)
 		return nil, err
 	}
 
@@ -44,7 +45,7 @@ func parsePlaylist(info []byte) models.PlayList {
 		music := new(models.Music)
 
 		music.Name = track.Get("name").ToString()
-		songURL := fmt.Sprintf("%s%s%s", PLAY_URL, track.Get("id").ToString(), ".mp3")
+		songURL := fmt.Sprintf("%s%s%s", PlayURL, track.Get("id").ToString(), ".mp3")
 		music.URL = songURL
 		music.Artists = getAllArtists(track)
 		music.Cover = track.Get("album").Get("blurPicUrl").ToString()

@@ -1,5 +1,0 @@
-package tokenutils
-
-func CheckToken(){
-
-}

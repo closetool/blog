@@ -14,7 +14,7 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-CREATE DATABASE test default CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE DATABASE test default CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE test;
 --
 -- Table structure for table `closetool_auth_token`
@@ -22,14 +22,14 @@ USE test;
 
 DROP TABLE IF EXISTS `closetool_auth_token`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_auth_token` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `token` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'token',
+  `token` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'token',
   `expire_time` datetime NOT NULL COMMENT '过期时间',
   `user_id` bigint(20) NOT NULL COMMENT '创建人',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT COMMENT='标签表';
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT COMMENT='标签表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,23 +48,23 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_auth_user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_auth_user` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `social_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '社交账户ID',
-  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '密码',
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '别名',
+  `social_id` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '社交账户ID',
+  `password` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '密码',
+  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '别名',
   `role_id` bigint(20) NOT NULL COMMENT '角色主键 1 普通用户 2 admin',
-  `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '邮箱',
-  `introduction` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '个人简介',
-  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '头像',
+  `email` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '邮箱',
+  `introduction` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '个人简介',
+  `avatar` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '头像',
   `create_time` datetime NOT NULL COMMENT '注册时间',
-  `access_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'ak',
-  `secret_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sk',
+  `access_key` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT 'ak',
+  `secret_key` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT 'sk',
   `status` int(1) DEFAULT '0' COMMENT '0 正常 1 锁定 ',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `idx_email` (`email`) COMMENT '邮箱唯一'
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -83,7 +83,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_auth_user_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_auth_user_log` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `user_id` varchar(20) NOT NULL COMMENT '记录用户id(游客取系统id：-1)',
@@ -98,7 +98,7 @@ CREATE TABLE `closetool_auth_user_log` (
   `browser_name` varchar(100) DEFAULT NULL COMMENT '浏览器名称',
   `browser_version` varchar(100) DEFAULT NULL COMMENT '浏览器版本号',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=COMPACT COMMENT='用户行为日志记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT COMMENT='用户行为日志记录表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -117,7 +117,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_auth_user_social`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_auth_user_social` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `code` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'qq、csdn、wechat、weibo、email等',
@@ -148,7 +148,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_black_list`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_black_list` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `ip_range` varchar(150) DEFAULT NULL COMMENT 'ip范围',
@@ -158,7 +158,7 @@ CREATE TABLE `closetool_black_list` (
   `update_user` datetime DEFAULT NULL COMMENT '更新者',
   `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='黑名单拦截表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='黑名单拦截表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -176,17 +176,17 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_category`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_category` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '名称',
+  `name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '名称',
   `sort` smallint(6) NOT NULL DEFAULT '0' COMMENT '排序',
   `create_time` datetime NOT NULL COMMENT '创建时间',
   `create_by` bigint(20) DEFAULT NULL COMMENT '创建人',
   `update_time` datetime NOT NULL COMMENT '更新时间',
   `update_by` bigint(20) DEFAULT NULL COMMENT '更新人',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -205,7 +205,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_category_tags`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_category_tags` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `tags_id` bigint(32) NOT NULL COMMENT '名称',
@@ -214,7 +214,7 @@ CREATE TABLE `closetool_category_tags` (
   `create_time` datetime NOT NULL COMMENT '创建时间',
   `update_time` datetime NOT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -233,15 +233,15 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_config`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_config` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `config_key` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '配置key',
+  `config_key` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置key',
   `config_value` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置值',
   `type` smallint(6) NOT NULL DEFAULT '0' COMMENT '配置类型',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `UK_99vo6d7ci4wlxruo3gd0q2jq8` (`config_key`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -260,7 +260,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_friendship_link`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_friendship_link` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `title` varchar(30) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '标题',
@@ -288,7 +288,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_menu`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_menu` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `parent_id` bigint(20) DEFAULT '0' COMMENT '父菜单Id',
@@ -315,24 +315,24 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_posts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_posts` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `author_id` bigint(255) DEFAULT NULL COMMENT '文章创建人',
-  `title` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '文章标题',
-  `thumbnail` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '封面图',
+  `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '文章标题',
+  `thumbnail` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '封面图',
   `comments` int(11) NOT NULL DEFAULT '0' COMMENT '评论数',
   `is_comment` smallint(6) DEFAULT '1' COMMENT '是否打开评论 (0 不打开 1 打开 )',
   `category_id` bigint(20) DEFAULT NULL COMMENT '分类主键',
   `sync_status` smallint(6) NOT NULL DEFAULT '0' COMMENT '同步到byteblogs状态',
   `status` int(11) NOT NULL DEFAULT '1' COMMENT '状态 1 草稿 2 发布',
-  `summary` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '摘要',
+  `summary` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '摘要',
   `views` int(11) NOT NULL DEFAULT '0' COMMENT '浏览次数',
   `weight` int(11) NOT NULL DEFAULT '0' COMMENT '文章权重',
   `create_time` datetime NOT NULL COMMENT '创建时间',
   `update_time` datetime NOT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -351,7 +351,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_posts_attribute`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_posts_attribute` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `content` longtext CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '内容',
@@ -376,18 +376,18 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_posts_comments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_posts_comments` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `author_id` bigint(20) NOT NULL,
-  `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `content` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `parent_id` bigint(20) NOT NULL DEFAULT '0',
   `status` int(11) NOT NULL DEFAULT '0',
   `posts_id` bigint(20) NOT NULL,
-  `tree_path` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '层级结构',
+  `tree_path` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '层级结构',
   `create_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT COMMENT='评论表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT COMMENT='评论表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -405,7 +405,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_posts_tags`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_posts_tags` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `tags_id` bigint(32) NOT NULL COMMENT '名称',
@@ -414,7 +414,7 @@ CREATE TABLE `closetool_posts_tags` (
   `create_time` datetime NOT NULL COMMENT '创建时间',
   `update_time` datetime NOT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -433,17 +433,17 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `closetool_tags`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8 ;
 CREATE TABLE `closetool_tags` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '名称',
+  `name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '名称',
   `sort` smallint(6) NOT NULL DEFAULT '0' COMMENT '排序',
   `create_time` datetime NOT NULL COMMENT '创建时间',
   `create_by` bigint(20) DEFAULT NULL COMMENT '创建人',
   `update_time` datetime NOT NULL COMMENT '更新时间',
   `update_by` bigint(20) DEFAULT NULL COMMENT '更新人',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT COMMENT='标签表';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT COMMENT='标签表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

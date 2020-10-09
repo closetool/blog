@@ -27,6 +27,8 @@ before_script:
     - docker network create -d overlay my_network
     - chmod a+x ./support/config-server/gradlew
     - chmod a+x ./support.sh ./springcloud.sh
+    - chmod a+x ./mysql.sh
+    - ./mysql.sh
 
 script: 
     - go test ./...

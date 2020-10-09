@@ -24,7 +24,7 @@ docker tag closetool/musicservice registry.cn-hangzhou.aliyuncs.com/closetool/mu
 docker push registry.cn-hangzhou.aliyuncs.com/closetool/musicservice
 
 docker service rm musicservice
-docker service create --replicas 1 --name musicservice -p 2599:2599 closetool/musicservice
+docker service create --network my_network --replicas 1 --name musicservice -p 2599:2599 closetool/musicservice
 rm config.yml
 #echo "exec 'docker service create -e CONFIG_SERVER="$server" -e PROFILE="$pro" -e BRANCH="$bra" --replicas 1 --name musicservice -p 2599:2599 closetool/musicservice'"
 #docker service create -e CONFIG_SERVER="$server" -e PROFILE="$pro" -e BRANCH="$bra" --replicas 1 --name musicservice -p 2599:2599 closetool/musicservice

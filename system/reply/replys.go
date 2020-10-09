@@ -19,6 +19,7 @@ const (
 	FileTypeError
 	ImportFileError
 	DatabaseSqlParseError
+	LoginOverTime
 )
 
 var Errors = map[int]string{
@@ -40,4 +41,5 @@ var Errors = map[int]string{
 	FileTypeError:         "文件类型错误",
 	ImportFileError:       "文件导入失败",
 	DatabaseSqlParseError: "数据库解析异常",
+	LoginOverTime:         "登录超时",
 }

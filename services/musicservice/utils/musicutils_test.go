@@ -1,11 +1,21 @@
 package utils
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/closetool/blog/system/initial"
+	"github.com/closetool/blog/system/log"
+	"github.com/sirupsen/logrus"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/spf13/viper"
 )
 
+func init() {
+	initial.InitConfig("musicservice")
+	viper.Set("log_level", fmt.Sprintf("%d", logrus.DebugLevel))
+	log.InitLog()
+}
 func TestParsePlaylist(t *testing.T) {
 	Convey("Given function json string to parsing", t, func() {
 		info := []byte(`{
