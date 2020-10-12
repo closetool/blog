@@ -34,7 +34,7 @@ func TestGenerateToken(t *testing.T) {
 				Id:   2,
 				Name: "closetool",
 			}
-			token, _ := GenerateToken(user)
+			token, _, _ := GenerateToken(user)
 			Convey("Then token should equal", func() {
 				res := strings.Split(token, ".")
 				body, _ := base64.RawStdEncoding.DecodeString(res[1])
@@ -55,7 +55,7 @@ func TestVerifyToken(t *testing.T) {
 			Name:     "closetool",
 			Password: "6193097d60899bcfd4f00a0896c9b610",
 		}
-		token, err := GenerateToken(user)
+		token, err, _ := GenerateToken(user)
 		if err != nil {
 			log.Logger.Errorf("generate token failed: %v\n", err)
 			t.Fail()

@@ -16,7 +16,7 @@ type AuthUser struct {
 	CreateTime   time.Time `xorm:"not null comment('注册时间') DATETIME created"`
 	AccessKey    string    `xorm:"comment('ak') VARCHAR(255)"`
 	SecretKey    string    `xorm:"comment('sk') VARCHAR(255)"`
-	Status       int       `xorm:"default 0 comment('1 正常 2 锁定 ') INT(1)"`
+	Status       int       `xorm:"default 0 comment('0 正常 1 锁定 ') INT(1)"`
 }
 
 func (t AuthUser) TableName() string {

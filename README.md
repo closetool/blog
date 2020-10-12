@@ -6,11 +6,11 @@
 
 * docker
 * docker swarm(管理集群，创建网络，健康检查，服务发现)
-* httpmock
-* convey
+* [httpmock](https://github.com/jarcoal/httpmock)
+* [convey](https://github.com/smartystreets/goconvey)
 * travis
-* jsoniter
-* gin
+* [jsoniter](https://github.com/json-iterator/go)
+* [gin](https://github.com/gin-gonic/gin)
 * mysql
 * redis(储存token，token过时视为登录失效)
 * nginx(反向代理，微服务网关)
@@ -18,7 +18,7 @@
 
 ## 全局
 
-* 配置中心地址(http://localhost:8888),profile,branch通过配置文件配置
+* 配置中心地址（http://localhost:8888）,profile,branch通过配置文件配置
 * 配置文件位于./,$HOME/config,/$HOME/${servicename}/ or /etc/${servicename}目录下，名字为config.yml或${servicename}.yml
 * 配置中心中必有service_port,service_name
 * log_file_path默认为./,log_file_name默认为${servicename}_${time}.log

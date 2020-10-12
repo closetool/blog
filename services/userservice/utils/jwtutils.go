@@ -11,7 +11,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func GenerateToken(userPO *po.AuthUser) (string, error) {
+func GenerateToken(userPO *po.AuthUser) (string, error, int64) {
 	user := vo.AuthUser{}
 	user.StandardClaims = new(jwt.StandardClaims)
 	user.ExpiresAt = time.Now().Add(constants.TokenTTL).Unix()
@@ -25,11 +25,11 @@ func GenerateToken(userPO *po.AuthUser) (string, error) {
 	if err != nil {
 		log.Logger.Errorf("generate jwt string failed: %v", err)
 	}
-	return ss, err
+	return ss, err, user.ExpiresAt
 }
 
 func VerifyToken(tokenString, key string) bool {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &vo.AuthUser{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
@@ -39,7 +39,12 @@ func VerifyToken(tokenString, key string) bool {
 		log.Logger.Errorf("token is invalid: %v", err)
 		return false
 	}
-	if token.Valid {
+	user, ok := token.Claims.(*vo.AuthUser)
+	if !ok {
+		return false
+	}
+
+	if token.Valid && user.VerifyExpiresAt(time.Now().Unix(), true) {
 		return true
 	}
 	return false

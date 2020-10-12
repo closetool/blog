@@ -12,7 +12,11 @@ import (
 )
 
 func UserToken(c *gin.Context) {
-	utils.GetSession(c)
+	ok := utils.GetSession(c)
+	if !ok {
+		noPrivilege(c)
+		return
+	}
 	if _, exist := c.Get("session"); exist {
 		c.Next()
 	} else {
@@ -21,7 +25,11 @@ func UserToken(c *gin.Context) {
 }
 
 func AdminToken(c *gin.Context) {
-	utils.GetSession(c)
+	ok := utils.GetSession(c)
+	if !ok {
+		noPrivilege(c)
+		return
+	}
 	if value, exist := c.Get("session"); exist {
 		if user, ok := value.(*po.AuthUser); !ok {
 			noPrivilege(c)
@@ -32,6 +40,7 @@ func AdminToken(c *gin.Context) {
 				noPrivilege(c)
 			}
 		}
+	} else {
 	}
 }
 

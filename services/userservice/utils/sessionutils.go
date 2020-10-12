@@ -8,20 +8,19 @@ import (
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/log"
-	"github.com/closetool/blog/system/reply"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
-func GetSession(c *gin.Context) {
+func GetSession(c *gin.Context) bool {
 	tokenString := c.Request.Header.Get(constants.AuthHeader)
 	if tokenString == "" {
-		panic(reply.InvalidToken)
+		return false
 	}
 
 	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, &vo.AuthUser{})
 	if err != nil {
-		panic(reply.InvalidToken)
+		return false
 	}
 
 	var (
@@ -30,26 +29,34 @@ func GetSession(c *gin.Context) {
 	)
 
 	if claim, ok = token.Claims.(*vo.AuthUser); !ok {
-		panic(reply.InvalidToken)
+		return false
 	} else if time.Unix(claim.ExpiresAt, 0).Sub(time.Now()).Seconds() <= 0 {
-		panic(reply.LoginOverTime)
+		return false
 	}
 
 	log.Logger.Debugf("claim = %#v\n", claim)
 	log.Logger.Debugf("standardclaim = %#v\n", claim.StandardClaims)
+
+	//登录逻辑，数据库中需要存在相应的token
+	//userToken := &po.AuthToken{}
+	//ok, err = db.DB.Where("user_id = ?", claim.Id).Get(userToken)
+	//if !ok || err != nil || !strings.EqualFold(userToken.Token, tokenString) {
+	//	return false
+	//}
 
 	user := &po.AuthUser{
 		Id: claim.Id,
 	}
 	ok, err = db.DB.Get(user)
 	if !ok || err != nil {
-		panic(reply.InvalidToken)
+		return false
 	}
 
 	ok = VerifyToken(tokenString, user.Password)
 	if !ok {
-		panic(reply.InvalidToken)
+		return false
 	}
 
 	c.Set("session", user)
+	return true
 }

@@ -8,6 +8,9 @@ const (
 
 	RoleUser  = 1
 	RoleAdmin = 2
+
+	AccountUnlocked = 0
+	AccountLocked   = 1
 )
 
 var (

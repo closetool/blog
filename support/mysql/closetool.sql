@@ -73,7 +73,7 @@ CREATE TABLE `closetool_auth_user` (
 
 LOCK TABLES `closetool_auth_user` WRITE;
 /*!40000 ALTER TABLE `closetool_auth_user` DISABLE KEYS */;
-INSERT INTO `closetool_auth_user` VALUES (2,'52988625','6193097d60899bcfd4f00a0896c9b610','closetool',1,NULL,NULL,'https://avatars3.githubusercontent.com/u/52988625?v=4','2020-09-10 15:56:04',NULL,NULL,0),(3,NULL,'57b2a95a9cf33dbd72fa5ef50f9662ad','c299999999@qq.com',2,'c299999999@qq.com',NULL,NULL,'2020-09-10 16:39:27','5f59e643e4b0b6475d662630','57b01ba9d2e8428a902f7985bdf5037c',0);
+INSERT INTO `closetool_auth_user` VALUES (2,'52988625','6193097d60899bcfd4f00a0896c9b610','closetool',1,NULL,NULL,'https://avatars3.githubusercontent.com/u/52988625?v=4','2020-09-10 15:56:04',NULL,NULL,0);
 /*!40000 ALTER TABLE `closetool_auth_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
