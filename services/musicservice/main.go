@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/closetool/blog/services/userservice/service"
+	"github.com/closetool/blog/services/musicservice/service"
 	"github.com/closetool/blog/system/config"
 	"github.com/closetool/blog/system/exit"
 	"github.com/closetool/blog/system/initial"

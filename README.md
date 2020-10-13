@@ -1,6 +1,8 @@
 # BLOG
 
-[![Build Status](https://www.travis-ci.org/closetool/blog.svg?branch=master)](https://www.travis-ci.org/closetool/blog)
+[![Build Status](https://www.travis-ci.org/closetool/blog.svg?branch=master)](https://www.travis-ci.org/closetool/blog) [![LICENSE](https://img.shields.io/github/license/closetool/blog)](https://github.com/closetool/blog)
+---
+对[plumemo](https://github.com/byteblogs168/plumemo)项目后端的重构，使其成为了微服务后端，配合对应前端使用[theme-react-sakura](https://github.com/byteblogs168/theme-react-sakura/)/[plumemo-admin](https://github.com/byteblogs168/plumemo-admin)
 
 ## 运用的技术
 
@@ -27,3 +29,6 @@
 ## Music Service
 * 特有config属性music_playlist_id(网易云歌单id)
 * 服务端口配置为2599
+## User Service
+* 因为[issue#338](https://github.com/gin-gonic/gin/issues/388)使`/social/v1/socials` `/social/v1/info` `/social/v1/list`与`social/v1/:id`无法兼容，将前三个路由v1改为v2
+* 需要数据库支持，先进入根目录运行./mysql.sh脚本搭建mysql环境
