@@ -256,12 +256,122 @@ func TestUpdateAdmin(t *testing.T) {
 		})
 	})
 }
+
 func TestUpdateUser(t *testing.T) {
 	Convey("Given a request to /auth/user/v1/update", t, func() {
 		token, _ := generateAdminToken()
 		req := httptest.NewRequest("PUT", "/auth/user/v1/update",
 			strings.NewReader(`{"Id":4,"name":"closetool_user",
 			"email":"4closetool3@gmail.com","avatar":"","introduction":"closetool's introduction"}`))
+
+		req.Header.Set(constants.AuthHeader, token)
+		resp := httptest.NewRecorder()
+		Convey("Pass request to server", func() {
+			r.ServeHTTP(resp, req)
+			Convey("Then reponse body should be", func() {
+				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				So(resp.Body.String(), ShouldContainSubstring, "00000")
+			})
+		})
+	})
+}
+
+func TestSaveSocial(t *testing.T) {
+	Convey("Given a request to /auth/social/v1/add", t, func() {
+		token, _ := generateAdminToken()
+		req := httptest.NewRequest("POST", "/auth/social/v1/add",
+			strings.NewReader(`{"code":"github","content":"https://github.com/closetool",
+			"showType":3,"isEnabled":1,"isHome":1}`))
+
+		req.Header.Set(constants.AuthHeader, token)
+		resp := httptest.NewRecorder()
+		Convey("Pass request to server", func() {
+			r.ServeHTTP(resp, req)
+			Convey("Then reponse body should be", func() {
+				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				So(resp.Body.String(), ShouldContainSubstring, "00000")
+			})
+		})
+	})
+}
+
+func TestEditSocial(t *testing.T) {
+	Convey("Given a request to /auth/social/v1/update", t, func() {
+		token, _ := generateAdminToken()
+		req := httptest.NewRequest("PUT", "/auth/social/v1/update",
+			strings.NewReader(`{"id":1,"code":"github","content":"https://github.com/closetool",
+			"showType":1,"isEnabled":1,"isHome":1}`))
+
+		req.Header.Set(constants.AuthHeader, token)
+		resp := httptest.NewRecorder()
+		Convey("Pass request to server", func() {
+			r.ServeHTTP(resp, req)
+			Convey("Then reponse body should be", func() {
+				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				So(resp.Body.String(), ShouldContainSubstring, "00000")
+			})
+		})
+	})
+}
+
+func TestGetSocial(t *testing.T) {
+	Convey("Given a request to /auth/social/v1/1", t, func() {
+		token, _ := generateAdminToken()
+		req := httptest.NewRequest("GET", "/auth/social/v1/1", nil)
+
+		req.Header.Set(constants.AuthHeader, token)
+		resp := httptest.NewRecorder()
+		Convey("Pass request to server", func() {
+			r.ServeHTTP(resp, req)
+			Convey("Then reponse body should be", func() {
+				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				So(resp.Body.String(), ShouldContainSubstring, "00000")
+				So(resp.Body.String(), ShouldContainSubstring, "github.com/closetool")
+			})
+		})
+	})
+}
+
+func TestGetSocialList(t *testing.T) {
+	Convey("Given a request to /auth/social/v2/list", t, func() {
+		token, _ := generateAdminToken()
+		req := httptest.NewRequest("GET", "/auth/social/v2/list", nil)
+
+		req.Header.Set(constants.AuthHeader, token)
+		resp := httptest.NewRecorder()
+		Convey("Pass request to server", func() {
+			r.ServeHTTP(resp, req)
+			Convey("Then reponse body should be", func() {
+				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				So(resp.Body.String(), ShouldContainSubstring, "00000")
+				So(resp.Body.String(), ShouldContainSubstring, "github.com/closetool")
+			})
+		})
+	})
+}
+
+func TestGetSocialInfo(t *testing.T) {
+	Convey("Given a request to /auth/social/v2/info", t, func() {
+		token, _ := generateAdminToken()
+		req := httptest.NewRequest("GET", "/auth/social/v2/info", nil)
+
+		req.Header.Set(constants.AuthHeader, token)
+		resp := httptest.NewRecorder()
+		Convey("Pass request to server", func() {
+			r.ServeHTTP(resp, req)
+			Convey("Then reponse body should be", func() {
+				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				So(resp.Body.String(), ShouldContainSubstring, "00000")
+				So(resp.Body.String(), ShouldContainSubstring, "github.com/closetool")
+			})
+		})
+	})
+}
+
+func TestDelSocial(t *testing.T) {
+	Convey("Given a request to /auth/social/v1/1", t, func() {
+		token, _ := generateAdminToken()
+		req := httptest.NewRequest("DELETE", "/auth/social/v1/1", nil)
 
 		req.Header.Set(constants.AuthHeader, token)
 		resp := httptest.NewRecorder()

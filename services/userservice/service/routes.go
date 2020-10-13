@@ -29,4 +29,13 @@ var Routes = []models.Route{
 	{Method: "PUT", Pattern: "/auth/v1/avatar", MiddleWare: nil, HandlerFunc: getAvatar},
 
 	{Method: "POST", Pattern: "/social/v1/add", MiddleWare: gin.HandlersChain{middlewares.AdminToken}, HandlerFunc: transaction.Wrapper(saveSocial)},
+	{Method: "PUT", Pattern: "/social/v1/update", MiddleWare: gin.HandlersChain{middlewares.AdminToken}, HandlerFunc: transaction.Wrapper(editSocial)},
+	{Method: "GET", Pattern: "/social/v1/:id", MiddleWare: nil, HandlerFunc: getSocial},
+	{Method: "DELETE", Pattern: "/social/v1/:id", MiddleWare: nil, HandlerFunc: transaction.Wrapper(delSocial)},
+	//FIXME
+	//{Method: "GET", Pattern: "/social/v1/list", MiddleWare: gin.HandlersChain{middlewares.AdminToken}, HandlerFunc: getSocialList},
+	{Method: "GET", Pattern: "/social/v2/list", MiddleWare: gin.HandlersChain{middlewares.AdminToken}, HandlerFunc: getSocialList},
+	//TODO
+	//{Method: "GET", Pattern: "/social/v1/socials", MiddleWare: nil, HandlerFunc: nil},
+	{Method: "GET", Pattern: "/social/v2/info", MiddleWare: nil, HandlerFunc: getSocialInfo},
 }

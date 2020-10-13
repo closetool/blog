@@ -11,6 +11,9 @@ const (
 
 	AccountUnlocked = 0
 	AccountLocked   = 1
+
+	SocialIsHome  = 1
+	SocialEnabled = 1
 )
 
 var (

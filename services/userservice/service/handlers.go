@@ -51,7 +51,8 @@ func deleteUser(c *gin.Context) error {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		panic(reply.ParamError)
+		reply.CreateJSONError(c, reply.ParamError)
+		return err
 	}
 	user := &po.AuthUser{Id: id}
 	ok, err := db.DB.Get(user)
@@ -470,5 +471,211 @@ func getAvatar(c *gin.Context) {
 }
 
 func saveSocial(c *gin.Context) error {
+	socialVO := &vo.AuthUserSocial{}
+	err := c.BindJSON(socialVO)
+	if err != nil {
+		reply.CreateJSONError(c, reply.ParamError)
+		return err
+	}
+
+	log.Logger.Debugf("social = %#v", socialVO)
+
+	if socialVO.Code == "" {
+		reply.CreateJSONError(c, reply.ParamError)
+		return nil
+	}
+
+	socialPO := &po.AuthUserSocial{
+		Code:      socialVO.Code,
+		ShowType:  socialVO.ShowType,
+		Content:   socialVO.Content,
+		Remark:    socialVO.Remark,
+		Icon:      socialVO.Icon,
+		IsEnabled: socialVO.IsEnabled,
+		IsHome:    socialVO.IsHome,
+	}
+
+	if count, err := db.DB.InsertOne(socialPO); count == 0 || err != nil {
+		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	reply.CreateJSONsuccess(c)
 	return nil
+}
+
+func editSocial(c *gin.Context) error {
+	socialVO := &vo.AuthUserSocial{}
+	err := c.BindJSON(socialVO)
+	if err != nil {
+		reply.CreateJSONError(c, reply.ParamError)
+		return err
+	}
+
+	if socialVO.Id == 0 {
+		reply.CreateJSONError(c, reply.ParamError)
+		return nil
+	}
+
+	socialPO := &po.AuthUserSocial{
+		Code:      socialVO.Code,
+		ShowType:  socialVO.ShowType,
+		Content:   socialVO.Content,
+		Remark:    socialVO.Remark,
+		Icon:      socialVO.Icon,
+		IsEnabled: socialVO.IsEnabled,
+		IsHome:    socialVO.IsHome,
+	}
+	if count, err := db.DB.ID(socialVO.Id).AllCols().
+		Update(socialPO); count == 0 || err != nil {
+		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	reply.CreateJSONsuccess(c)
+	return nil
+}
+
+func getSocial(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		reply.CreateJSONError(c, reply.ParamError)
+		return
+	}
+
+	socialPO := &po.AuthUserSocial{}
+	ok, err := db.DB.ID(id).Get(socialPO)
+	if !ok || err != nil {
+		log.Logger.Debugf("selecting from db failed: %v", err)
+		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
+		return
+	}
+
+	social := &vo.AuthUserSocial{
+		Id:         socialPO.Id,
+		Code:       socialPO.Code,
+		Content:    socialPO.Content,
+		ShowType:   socialPO.ShowType,
+		Remark:     socialPO.Remark,
+		Icon:       socialPO.Icon,
+		IsEnabled:  socialPO.IsEnabled,
+		IsHome:     socialPO.IsHome,
+		CreateTime: &models.JSONTime{socialPO.CreateTime},
+		UpdateTime: &models.JSONTime{socialPO.UpdateTime},
+	}
+
+	reply.CreateJSONModel(c, social)
+	return
+}
+
+func delSocial(c *gin.Context) error {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		reply.CreateJSONError(c, reply.ParamError)
+		return err
+	}
+
+	if count, err := db.DB.ID(id).Delete(&po.AuthUserSocial{}); count == 0 || err != nil {
+		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
+		return err
+	}
+
+	reply.CreateJSONsuccess(c)
+	return nil
+}
+
+func getSocialList(c *gin.Context) {
+	socialVO := &vo.AuthUserSocial{IsEnabled: -1, IsHome: -1}
+	err := c.BindQuery(socialVO)
+	if err != nil {
+		reply.CreateJSONError(c, reply.ParamError)
+	}
+
+	page := pageutils.CheckAndInitPage(socialVO.BaseVO)
+	session := db.DB.NewSession()
+
+	if socialVO.BaseVO != nil && socialVO.Keywords != "" {
+		session.Where("code like ?", "%"+socialVO.Keywords+"%")
+	}
+	if socialVO.Code != "" {
+		session.Where("code = ?", socialVO.Code)
+	}
+	if socialVO.Content != "" {
+		session.Where("content = ?", socialVO.Content)
+	}
+	if socialVO.ShowType != 0 {
+		session.Where("show_type = ?", socialVO.ShowType)
+	}
+	if socialVO.Remark != "" {
+		session.Where("remark = ?", socialVO.Remark)
+	}
+	if socialVO.IsEnabled != -1 {
+		session.Where("is_enabled = ?", socialVO.IsEnabled)
+	}
+	if socialVO.IsHome != -1 {
+		session.Where("is_home = ?", socialVO.IsHome)
+	}
+	session.Limit(pageutils.StartAndEnd(page))
+	session.OrderBy("id")
+
+	lists := make([]po.AuthUserSocial, 0)
+	if err = session.Find(&lists); err != nil {
+		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
+		return
+	}
+
+	results := make([]interface{}, 0)
+	for _, socialPO := range lists {
+		social := vo.AuthUserSocial{
+			Id:         socialPO.Id,
+			Code:       socialPO.Code,
+			Content:    socialPO.Content,
+			ShowType:   socialPO.ShowType,
+			Remark:     socialPO.Remark,
+			Icon:       socialPO.Icon,
+			IsEnabled:  socialPO.IsEnabled,
+			IsHome:     socialPO.IsHome,
+			CreateTime: &models.JSONTime{socialPO.CreateTime},
+			UpdateTime: &models.JSONTime{socialPO.UpdateTime},
+		}
+		results = append(results, social)
+	}
+
+	reply.CreateJSONPaging(c, results, page)
+}
+
+func getSocialInfo(c *gin.Context) {
+	socialVOs := make([]interface{}, 0)
+	socialPOs := make([]*po.AuthUserSocial, 0)
+	err := db.DB.Where("is_enabled = ? and is_home = ?", constants.SocialEnabled, constants.SocialIsHome).
+		Find(&socialPOs)
+	if err != nil {
+		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
+		return
+	}
+
+	for _, socialPO := range socialPOs {
+		social := vo.AuthUserSocial{
+			Id:         socialPO.Id,
+			Code:       socialPO.Code,
+			Content:    socialPO.Content,
+			ShowType:   socialPO.ShowType,
+			Remark:     socialPO.Remark,
+			Icon:       socialPO.Icon,
+			IsEnabled:  socialPO.IsEnabled,
+			IsHome:     socialPO.IsHome,
+			CreateTime: &models.JSONTime{socialPO.CreateTime},
+			UpdateTime: &models.JSONTime{socialPO.UpdateTime},
+		}
+		socialVOs = append(socialVOs, social)
+	}
+	reply.CreateJSONModels(c, socialVOs)
 }
