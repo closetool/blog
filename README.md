@@ -20,6 +20,9 @@
 
 ## 全局
 
+* 使用脚本部署组件前先登录仓库并设置环境变量ALIYUN(registry.cn-hangzhou.aliyuncs.com/)
+* 安装configserver前要先装rabbitmq
+* configserver依赖jdk8
 * 配置中心地址（http://localhost:8888）,profile,branch通过配置文件配置
 * 配置文件位于./,$HOME/config,/$HOME/${servicename}/ or /etc/${servicename}目录下，名字为config.yml或${servicename}.yml
 * 配置中心中必有service_port,service_name

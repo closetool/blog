@@ -16,6 +16,7 @@ func Wrapper(fn func(*gin.Context) error) func(*gin.Context) {
 		if err != nil {
 			session.Rollback()
 			reply.CreateJSONError(g, reply.Error)
+			return
 		}
 		err = fn(g)
 		if err != nil {
