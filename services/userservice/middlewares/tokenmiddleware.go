@@ -6,9 +6,9 @@ import (
 	"github.com/closetool/blog/services/userservice/models/po"
 	"github.com/closetool/blog/services/userservice/utils"
 	"github.com/closetool/blog/system/constants"
-	"github.com/closetool/blog/system/log"
 	"github.com/closetool/blog/system/reply"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func UserToken(c *gin.Context) {
@@ -46,7 +46,7 @@ func AdminToken(c *gin.Context) {
 
 func noPrivilege(c *gin.Context) {
 	value, _ := c.Get("session")
-	log.Logger.Debugf("no privilege %v\n", value)
+	logrus.Debugf("no privilege %v\n", value)
 	c.AbortWithStatusJSON(http.StatusOK, reply.CreateWithErrorX(reply.AccessNoPrivilege))
 }
 

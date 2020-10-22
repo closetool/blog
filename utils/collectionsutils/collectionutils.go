@@ -9,7 +9,8 @@ func IsSliceEmpty(slice []interface{}) bool {
 	return true
 }
 
-func RandomBytes(l uint64) []byte {
+//random string
+func RandomString(l uint64) []byte {
 	source := []byte("0123456789abcdefghijklmnopqrstuvwxyz")
 	dst := make([]byte, l)
 

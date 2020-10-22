@@ -7,9 +7,9 @@ import (
 	"github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
-	"github.com/closetool/blog/system/log"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func GetSession(c *gin.Context) bool {
@@ -34,8 +34,8 @@ func GetSession(c *gin.Context) bool {
 		return false
 	}
 
-	log.Logger.Debugf("claim = %#v\n", claim)
-	log.Logger.Debugf("standardclaim = %#v\n", claim.StandardClaims)
+	logrus.Debugf("claim = %#v\n", claim)
+	logrus.Debugf("standardclaim = %#v\n", claim.StandardClaims)
 
 	//登录逻辑，数据库中需要存在相应的token
 	//userToken := &po.AuthToken{}

@@ -2,9 +2,9 @@ package transaction
 
 import (
 	"github.com/closetool/blog/system/db"
-	"github.com/closetool/blog/system/log"
 	"github.com/closetool/blog/system/reply"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func Wrapper(fn func(*gin.Context) error) func(*gin.Context) {
@@ -21,10 +21,10 @@ func Wrapper(fn func(*gin.Context) error) func(*gin.Context) {
 		err = fn(g)
 		if err != nil {
 			session.Rollback()
-			log.Logger.Errorf("transaction rollbacked: %v\n", err)
+			logrus.Errorf("transaction rollbacked: %v\n", err)
 			return
 		}
 		session.Commit()
-		log.Logger.Debugf("transaction committed\n")
+		logrus.Debugf("transaction committed\n")
 	}
 }

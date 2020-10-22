@@ -25,7 +25,7 @@ func init() {
 
 func TestRandomString(t *testing.T) {
 	Convey("Random String", t, func() {
-		res := RandomBytes(32)
+		res := RandomString(32)
 		Convey("result should have 32 bit", func() {
 			log.Logger.Debugf("res = %v\n", string(res))
 			So(res, ShouldHaveLength, 32)

@@ -7,7 +7,6 @@ import (
 	"github.com/closetool/blog/system/config"
 	"github.com/closetool/blog/system/exit"
 	"github.com/closetool/blog/system/initial"
-	"github.com/closetool/blog/system/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -28,7 +27,7 @@ func main() {
 		viper.GetString("branch"),
 	)
 
-	log.InitLog()
+	initial.InitLog()
 
 	r := initial.InitServer(service.Routes, "/music")
 

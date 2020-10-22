@@ -11,7 +11,6 @@ import (
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/initial"
-	"github.com/closetool/blog/system/log"
 	"github.com/closetool/blog/utils/routeutils"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -24,7 +23,7 @@ var r *gin.Engine
 func init() {
 	initial.InitConfig("userservice")
 	viper.Set("log_level", fmt.Sprintf("%d", logrus.DebugLevel))
-	log.InitLog()
+	initial.InitLog()
 	viper.Set("db_location", "root:%s@/test?charset=utf8")
 	viper.Set("db_password", "123456")
 	db.DbInit()
@@ -49,7 +48,7 @@ func TestRegisterAdminByGithub(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
 		})
@@ -58,13 +57,14 @@ func TestRegisterAdminByGithub(t *testing.T) {
 
 func TestGetUserInfo(t *testing.T) {
 	Convey("Given a request to server", t, func() {
+		token, _ := generateAdminToken()
 		req := httptest.NewRequest("GET", "/auth/user/v1/get", nil)
-		req.Header.Set(constants.AuthHeader, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6ImNsb3NldG9vbCIsImV4cCI6MTYwMjc0NDQxNH0.Rlg4j193eUmymCmcBeemvbI9k-fPRDMQMfTKFYrxE3Y")
+		req.Header.Set(constants.AuthHeader, token)
 		resp := httptest.NewRecorder()
 		Convey("When pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then response body should have message", func() {
-				log.Logger.Debugf("response = %s\n", resp.Body.String())
+				logrus.Debugf("response = %s", resp.Body.String())
 				So(resp.Result().StatusCode, ShouldEqual, 200)
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
@@ -75,9 +75,9 @@ func TestGetUserInfo(t *testing.T) {
 func generateAdminToken() (string, error) {
 	admin := &po.AuthUser{}
 	db.DB.Where("role_id=?", 2).Get(admin)
-	log.Logger.Debugf("admin = %#v\n", admin)
+	logrus.Debugf("admin = %#v", admin)
 	token, err, _ := utils.GenerateToken(admin)
-	log.Logger.Debugf("token = %v\n", token)
+	logrus.Debugf("token = %v", token)
 	return token, err
 }
 
@@ -109,7 +109,7 @@ func TestGetUserList(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 				So(resp.Body.String(), ShouldContainSubstring, "closetool")
 			})
@@ -124,7 +124,7 @@ func TestGetMasterUserInfo(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
 		})
@@ -138,7 +138,7 @@ func TestOauthByGithub(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 				So(resp.Body.String(), ShouldContainSubstring,
 					"https://github.com/login/oauth/authorize?scope=public_repo,read:user&client_id=09087b58751fd0859bce")
@@ -158,7 +158,7 @@ func TestDeleteUserFail(t *testing.T) {
 			Convey("When pass request to server", func() {
 				r.ServeHTTP(resp, req)
 				Convey("Then response body should have message", func() {
-					log.Logger.Debugf("response = %s\n", resp.Body.String())
+					logrus.Debugf("response = %s", resp.Body.String())
 					So(resp.Result().StatusCode, ShouldEqual, 200)
 					So(resp.Body.String(), ShouldContainSubstring, "00011")
 				})
@@ -171,9 +171,9 @@ func TestDeleteUserSucceed(t *testing.T) {
 	Convey("Generate admin token", t, func() {
 		token, err := generateAdminToken()
 		if err != nil {
-			log.Logger.Panicf("generate token failed: %v\n", err)
+			logrus.Panicf("generate token failed: %v", err)
 		}
-		log.Logger.Debugf("token = %v\n", token)
+		logrus.Debugf("token = %v", token)
 
 		Convey("Given a request to server", func() {
 			req := httptest.NewRequest("DELETE", "/auth/user/v1/2", nil)
@@ -182,7 +182,7 @@ func TestDeleteUserSucceed(t *testing.T) {
 			Convey("When pass request to server", func() {
 				r.ServeHTTP(resp, req)
 				Convey("Then response body should have message", func() {
-					log.Logger.Debugf("response = %s\n", resp.Body.String())
+					logrus.Debugf("response = %s", resp.Body.String())
 					So(resp.Result().StatusCode, ShouldEqual, 200)
 					So(resp.Body.String(), ShouldContainSubstring, "00000")
 				})
@@ -198,7 +198,7 @@ func TestSaveUserByGithub(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
 		})
@@ -212,7 +212,7 @@ func TestLogin(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "c299999999@qq.com")
 			})
 		})
@@ -229,7 +229,7 @@ func TestUpdatePassword(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
 		})
@@ -250,7 +250,7 @@ func TestUpdateAdmin(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
 		})
@@ -269,7 +269,7 @@ func TestUpdateUser(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
 		})
@@ -288,7 +288,7 @@ func TestSaveSocial(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
 		})
@@ -307,7 +307,7 @@ func TestEditSocial(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
 		})
@@ -324,7 +324,7 @@ func TestGetSocial(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 				So(resp.Body.String(), ShouldContainSubstring, "github.com/closetool")
 			})
@@ -342,7 +342,7 @@ func TestGetSocialList(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 				So(resp.Body.String(), ShouldContainSubstring, "github.com/closetool")
 			})
@@ -360,7 +360,7 @@ func TestGetSocialInfo(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 				So(resp.Body.String(), ShouldContainSubstring, "github.com/closetool")
 			})
@@ -378,7 +378,7 @@ func TestDelSocial(t *testing.T) {
 		Convey("Pass request to server", func() {
 			r.ServeHTTP(resp, req)
 			Convey("Then reponse body should be", func() {
-				log.Logger.Debugf("response = %v\n", resp.Body.String())
+				logrus.Debugf("response = %v", resp.Body.String())
 				So(resp.Body.String(), ShouldContainSubstring, "00000")
 			})
 		})

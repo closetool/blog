@@ -10,7 +10,6 @@ import (
 	"github.com/closetool/blog/services/userservice/models/po"
 	"github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/system/initial"
-	"github.com/closetool/blog/system/log"
 	"github.com/sirupsen/logrus"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/spf13/viper"
@@ -19,7 +18,7 @@ import (
 func init() {
 	initial.InitConfig("userservice")
 	viper.Set("log_level", fmt.Sprintf("%d", logrus.DebugLevel))
-	log.InitLog()
+	initial.InitLog()
 }
 func TestGenerateToken(t *testing.T) {
 	Convey("Given a user info to generate token", t, func() {
@@ -57,11 +56,11 @@ func TestVerifyToken(t *testing.T) {
 		}
 		token, err, _ := GenerateToken(user)
 		if err != nil {
-			log.Logger.Errorf("generate token failed: %v\n", err)
+			logrus.Errorf("generate token failed: %v\n", err)
 			t.Fail()
 		}
 
-		log.Logger.Debugf("token = %v\n", token)
+		logrus.Debugf("token = %v\n", token)
 		Convey("Given a token string to verifing", func() {
 			Convey("When pass it to function", func() {
 				res := VerifyToken(token, user.Password)

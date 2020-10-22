@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/closetool/blog/services/musicservice/models"
-	"github.com/closetool/blog/system/log"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -21,14 +21,14 @@ func GetPlaylist() (models.PlayList, error) {
 	playlistURL := fmt.Sprintf("%s%s", MusicPrefixURL, viper.GetString("music_playlist_id"))
 	resp, err := http.Get(playlistURL)
 	if err != nil || resp.StatusCode != 200 {
-		log.Logger.Errorf("get music play list failed: %v", err)
+		logrus.Errorf("get music play list failed: %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	playlistInfo, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Logger.Errorf("read response body from playlist failed: %v", err)
+		logrus.Errorf("read response body from playlist failed: %v", err)
 		return nil, err
 	}
 

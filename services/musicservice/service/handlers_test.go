@@ -8,7 +8,6 @@ import (
 
 	"github.com/closetool/blog/services/musicservice/models"
 	"github.com/closetool/blog/system/initial"
-	"github.com/closetool/blog/system/log"
 	"github.com/closetool/blog/utils/routeutils"
 	"github.com/gin-gonic/gin"
 	"github.com/jarcoal/httpmock"
@@ -21,7 +20,7 @@ import (
 func init() {
 	initial.InitConfig("musicservice")
 	viper.Set("log_level", fmt.Sprintf("%d", logrus.DebugLevel))
-	log.InitLog()
+	initial.InitLog()
 }
 
 func TestGetPlaylist(t *testing.T) {

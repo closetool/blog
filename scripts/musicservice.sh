@@ -18,9 +18,9 @@ echo "built musicservice-linux-amd64 in `pwd`"
 
 docker build -t closetool/musicservice ./
 
-echo "pushing images to aliyun"
-docker tag closetool/musicservice "$ALIYUN"closetool/musicservice
-docker push "$ALIYUN"closetool/musicservice
+#echo "pushing images to aliyun"
+#docker tag closetool/musicservice "$ALIYUN"closetool/musicservice
+#docker push "$ALIYUN"closetool/musicservice
 
 docker service rm musicservice
 docker service create --network my_network --replicas 1 --name musicservice -p 2599:2599 "$ALIYUN"closetool/musicservice

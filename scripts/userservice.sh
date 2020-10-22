@@ -14,9 +14,9 @@ echo "built userservice-linux-amd64 in `pwd`"
 
 docker build -t closetool/userservice ./
 
-echo "pushing images to aliyun"
-docker tag closetool/userservice "$ALIYUN"closetool/userservice
-docker push "$ALIYUN"closetool/userservice
+#echo "pushing images to aliyun"
+#docker tag closetool/userservice "$ALIYUN"closetool/userservice
+#docker push "$ALIYUN"closetool/userservice
 
 docker service rm userservice 
 docker service create --network my_network --replicas 1 --name userservice -p 2600:2600 "$ALIYUN"closetool/userservice

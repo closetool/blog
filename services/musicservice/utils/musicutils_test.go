@@ -6,7 +6,6 @@ import (
 
 	"github.com/closetool/blog/services/musicservice/models"
 	"github.com/closetool/blog/system/initial"
-	"github.com/closetool/blog/system/log"
 	"github.com/sirupsen/logrus"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/spf13/viper"
@@ -15,7 +14,7 @@ import (
 func init() {
 	initial.InitConfig("musicservice")
 	viper.Set("log_level", fmt.Sprintf("%d", logrus.DebugLevel))
-	log.InitLog()
+	initial.InitLog()
 }
 func TestParsePlaylist(t *testing.T) {
 	Convey("Given function json string to parsing", t, func() {

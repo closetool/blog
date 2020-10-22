@@ -35,3 +35,8 @@
 ## User Service
 * 因为[issue#338](https://github.com/gin-gonic/gin/issues/388)使`/social/v1/socials` `/social/v1/info` `/social/v1/list`与`social/v1/:id`无法兼容，将前三个路由v1改为v2
 * 需要数据库支持，先进入根目录运行./mysql.sh脚本搭建mysql环境
+
+## FIXME
+* docker swarm中不同node之间的同一overlay网络中的容器无法互相访问，nginx代理只能使用公网
+* gin框架中不支持注册spring中的requestmapping，只能为路由多次注册不同方法
+* gin框架中/info和/:id路由冲突

@@ -36,6 +36,6 @@ var Routes = []models.Route{
 	//{Method: "GET", Pattern: "/social/v1/list", MiddleWare: gin.HandlersChain{middlewares.AdminToken}, HandlerFunc: getSocialList},
 	{Method: "GET", Pattern: "/social/v2/list", MiddleWare: gin.HandlersChain{middlewares.AdminToken}, HandlerFunc: getSocialList},
 	//TODO
-	//{Method: "GET", Pattern: "/social/v1/socials", MiddleWare: nil, HandlerFunc: nil},
+	{Method: "GET", Pattern: "/social/v2/socials", MiddleWare: nil, HandlerFunc: getSocialEnableList},
 	{Method: "GET", Pattern: "/social/v2/info", MiddleWare: nil, HandlerFunc: getSocialInfo},
 }

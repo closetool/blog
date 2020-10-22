@@ -16,12 +16,12 @@ import (
 	"github.com/closetool/blog/services/userservice/utils"
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
-	"github.com/closetool/blog/system/log"
 	"github.com/closetool/blog/system/models"
 	"github.com/closetool/blog/system/reply"
 	"github.com/closetool/blog/utils/collectionsutils"
 	"github.com/closetool/blog/utils/pageutils"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -35,7 +35,7 @@ func Health(c *gin.Context) {
 func getUserInfo(c *gin.Context) {
 	value, _ := c.Get("session")
 	user, _ := value.(*po.AuthUser)
-	log.Logger.Debugf("user = %#v\n", user)
+	logrus.Debugf("user = %#v", user)
 	userVO := &vo.AuthUser{}
 	userVO.Status = user.Status
 	userVO.Roles = []string{constants.Roles[user.RoleId]}
@@ -78,7 +78,7 @@ func saveAuthUserStatus(c *gin.Context) error {
 		return err
 	}
 
-	log.Logger.Debugf("user = %#v\n", userVO)
+	logrus.Debugf("user = %#v", userVO)
 
 	//将AuthUser中的数字属性默认值设置为-1
 	//避免默认值和真实值相冲突
@@ -86,8 +86,8 @@ func saveAuthUserStatus(c *gin.Context) error {
 		count, err := db.DB.Table(new(po.AuthUser)).ID(userVO.Id).
 			Where("role_id = ?", constants.RoleUser).
 			Update(map[string]interface{}{"status": userVO.Status})
-		log.Logger.Debugf("count = %v\n", count)
-		log.Logger.Debugf("err = %v\n", err)
+		logrus.Debugf("count = %v", count)
+		logrus.Debugf("err = %v", err)
 		if err == nil {
 			c.JSON(http.StatusOK, reply.CreateWithSuccess())
 			return nil
@@ -124,12 +124,12 @@ func getUserList(c *gin.Context) {
 		return
 	}
 	page := pageutils.CheckAndInitPage(userVO.BaseVO)
-	log.Logger.Debugf("userVO = %#v\n", userVO)
-	log.Logger.Debugf("page = %#v\n", page)
+	logrus.Debugf("userVO = %#v", userVO)
+	logrus.Debugf("page = %#v", page)
 
 	session := db.DB.Table(new(po.AuthUser))
 	if userVO.BaseVO != nil && userVO.Keywords != "" {
-		log.Logger.Debugf("keywords = %s\n", userVO.Keywords)
+		logrus.Debugf("keywords = %s", userVO.Keywords)
 		session = session.Where("name like ?", "%"+userVO.Keywords+"%")
 	}
 	if userVO.Name != "" {
@@ -143,7 +143,7 @@ func getUserList(c *gin.Context) {
 	users := make([]*po.AuthUser, 0)
 	count, err := session.FindAndCount(&users)
 	if err != nil {
-		log.Logger.Errorf("when selecting in database, an error occurred: %v\n", err)
+		logrus.Errorf("when selecting in database, an error occurred: %v", err)
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return
 	}
@@ -165,7 +165,7 @@ func getUserList(c *gin.Context) {
 
 func oathLoginByGithub(c *gin.Context) {
 	url := viper.GetString("github_auth_url")
-	log.Logger.Debugf("github auth url = %v\n", url)
+	logrus.Debugf("github auth url = %v", url)
 	c.PureJSON(http.StatusOK, reply.CreateWithModel(map[string]string{"authorizeUrl": url}))
 }
 
@@ -174,7 +174,7 @@ func saveUserByGithub(c *gin.Context) error {
 	err := c.ShouldBindJSON(&userVO)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
-		log.Logger.Errorf("save user by github parameters error: %v", err)
+		logrus.Errorf("save user by github parameters error: %v", err)
 		return err
 	}
 
@@ -182,10 +182,10 @@ func saveUserByGithub(c *gin.Context) error {
 	ok, err := db.DB.Where("social_id = ?", userVO.SocialId).Get(user)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
-		log.Logger.Errorf("get user by social_id failed: %v", err)
+		logrus.Errorf("get user by social_id failed: %v", err)
 		return err
 	}
-	hs := hmac.New(md5.New, collectionsutils.RandomBytes(32))
+	hs := hmac.New(md5.New, collectionsutils.RandomString(32))
 	if !ok {
 		userPO := po.AuthUser{
 			SocialId: userVO.SocialId,
@@ -197,7 +197,7 @@ func saveUserByGithub(c *gin.Context) error {
 		_, err := db.DB.InsertOne(&userPO)
 		if err != nil {
 			reply.CreateJSONError(c, reply.Error)
-			log.Logger.Errorf("insert into %s failed: %v", userPO.TableName(), err)
+			logrus.Errorf("insert into %s failed: %v", userPO.TableName(), err)
 			return err
 		}
 
@@ -216,7 +216,7 @@ func saveUserByGithub(c *gin.Context) error {
 	token, err, expire := utils.GenerateToken(user)
 	if err != nil {
 		reply.CreateJSONError(c, reply.Error)
-		log.Logger.Errorf("generate token failed: %v", err)
+		logrus.Errorf("generate token failed: %v", err)
 	}
 
 	userVO.CreateTime = &models.JSONTime{user.CreateTime}
@@ -231,7 +231,7 @@ func saveUserByGithub(c *gin.Context) error {
 	_, err = db.DB.InsertOne(userToken)
 	if err != nil {
 		reply.CreateJSONError(c, reply.Error)
-		log.Logger.Errorf("Insert token failed: %v", err)
+		logrus.Errorf("Insert token failed: %v", err)
 		return err
 	}
 	reply.CreateJSONModel(c, userVO)
@@ -243,7 +243,7 @@ func registerAdminByGithub(c *gin.Context) error {
 	err := c.BindJSON(userVO)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
-		log.Logger.Errorf("could not bind parameters: %v\n", err)
+		logrus.Errorf("could not bind parameters: %v", err)
 		return err
 	}
 
@@ -251,7 +251,7 @@ func registerAdminByGithub(c *gin.Context) error {
 	ok, err := db.DB.Where("role_id = ?", constants.RoleAdmin).Get(admin)
 	if err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		log.Logger.Errorf("select admin from db failed: %v\n", err)
+		logrus.Errorf("select admin from db failed: %v", err)
 		return err
 	}
 
@@ -265,7 +265,7 @@ func registerAdminByGithub(c *gin.Context) error {
 		_, err := db.DB.InsertOne(userPO)
 		if err != nil {
 			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-			log.Logger.Errorf("insert admin from db failed: %v\n", err)
+			logrus.Errorf("insert admin from db failed: %v", err)
 			return err
 		}
 	} else {
@@ -282,7 +282,7 @@ func login(c *gin.Context) {
 	err := c.BindJSON(userVO)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
-		log.Logger.Errorf("could not bind parameters: %v\n", err)
+		logrus.Errorf("could not bind parameters: %v", err)
 		return
 	}
 
@@ -292,7 +292,7 @@ func login(c *gin.Context) {
 
 	if err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		log.Logger.Errorf("select from database failed: %v\n", err)
+		logrus.Errorf("select from database failed: %v", err)
 		return
 	}
 
@@ -305,7 +305,7 @@ func login(c *gin.Context) {
 			token, err, expire := utils.GenerateToken(admin)
 			if err != nil {
 				reply.CreateJSONError(c, reply.Error)
-				log.Logger.Errorf("generate token failed: %v", err)
+				logrus.Errorf("generate token failed: %v", err)
 			}
 
 			userVO.Roles = []string{constants.Roles[admin.RoleId]}
@@ -320,7 +320,7 @@ func login(c *gin.Context) {
 			_, err = db.DB.InsertOne(userToken)
 			if err != nil {
 				reply.CreateJSONError(c, reply.Error)
-				log.Logger.Errorf("Insert token failed: %v", err)
+				logrus.Errorf("Insert token failed: %v", err)
 				return
 			}
 		} else {
@@ -338,7 +338,7 @@ func updatePassword(c *gin.Context) error {
 	err := c.BindJSON(userVO)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
-		log.Logger.Errorf("could not bind parameters: %v\n", err)
+		logrus.Errorf("could not bind parameters: %v", err)
 		return err
 	}
 
@@ -373,7 +373,7 @@ func updateAdmin(c *gin.Context) error {
 	err := c.BindJSON(userVO)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
-		log.Logger.Errorf("could not bind parameters: %v\n", err)
+		logrus.Errorf("could not bind parameters: %v", err)
 		return err
 	}
 
@@ -434,7 +434,7 @@ func contextBindAuthUser(c *gin.Context, userVO *vo.AuthUser) error {
 	err := c.BindJSON(userVO)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
-		log.Logger.Errorf("could not bind parameters: %v\n", err)
+		logrus.Errorf("could not bind parameters: %v", err)
 		return err
 	}
 	return nil
@@ -478,7 +478,7 @@ func saveSocial(c *gin.Context) error {
 		return err
 	}
 
-	log.Logger.Debugf("social = %#v", socialVO)
+	logrus.Debugf("social = %#v", socialVO)
 
 	if socialVO.Code == "" {
 		reply.CreateJSONError(c, reply.ParamError)
@@ -553,7 +553,7 @@ func getSocial(c *gin.Context) {
 	socialPO := &po.AuthUserSocial{}
 	ok, err := db.DB.ID(id).Get(socialPO)
 	if !ok || err != nil {
-		log.Logger.Debugf("selecting from db failed: %v", err)
+		logrus.Debugf("selecting from db failed: %v", err)
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return
 	}
@@ -593,10 +593,50 @@ func delSocial(c *gin.Context) error {
 }
 
 func getSocialList(c *gin.Context) {
+	socialList(c, -1)
+}
+
+func getSocialEnableList(c *gin.Context) {
+	socialList(c, 1)
+}
+
+func getSocialInfo(c *gin.Context) {
+	socialVOs := make([]interface{}, 0)
+	socialPOs := make([]*po.AuthUserSocial, 0)
+	err := db.DB.Where("is_enabled = ? and is_home = ?", constants.SocialEnabled, constants.SocialIsHome).
+		Find(&socialPOs)
+	if err != nil {
+		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
+		return
+	}
+
+	for _, socialPO := range socialPOs {
+		social := vo.AuthUserSocial{
+			Id:         socialPO.Id,
+			Code:       socialPO.Code,
+			Content:    socialPO.Content,
+			ShowType:   socialPO.ShowType,
+			Remark:     socialPO.Remark,
+			Icon:       socialPO.Icon,
+			IsEnabled:  socialPO.IsEnabled,
+			IsHome:     socialPO.IsHome,
+			CreateTime: &models.JSONTime{socialPO.CreateTime},
+			UpdateTime: &models.JSONTime{socialPO.UpdateTime},
+		}
+		socialVOs = append(socialVOs, social)
+	}
+	reply.CreateJSONModels(c, socialVOs)
+}
+
+func socialList(c *gin.Context, enabled int) {
 	socialVO := &vo.AuthUserSocial{IsEnabled: -1, IsHome: -1}
 	err := c.BindQuery(socialVO)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
+	}
+
+	if enabled == 0 || enabled == 1 {
+		socialVO.IsEnabled = enabled
 	}
 
 	page := pageutils.CheckAndInitPage(socialVO.BaseVO)
@@ -650,32 +690,4 @@ func getSocialList(c *gin.Context) {
 	}
 
 	reply.CreateJSONPaging(c, results, page)
-}
-
-func getSocialInfo(c *gin.Context) {
-	socialVOs := make([]interface{}, 0)
-	socialPOs := make([]*po.AuthUserSocial, 0)
-	err := db.DB.Where("is_enabled = ? and is_home = ?", constants.SocialEnabled, constants.SocialIsHome).
-		Find(&socialPOs)
-	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-
-	for _, socialPO := range socialPOs {
-		social := vo.AuthUserSocial{
-			Id:         socialPO.Id,
-			Code:       socialPO.Code,
-			Content:    socialPO.Content,
-			ShowType:   socialPO.ShowType,
-			Remark:     socialPO.Remark,
-			Icon:       socialPO.Icon,
-			IsEnabled:  socialPO.IsEnabled,
-			IsHome:     socialPO.IsHome,
-			CreateTime: &models.JSONTime{socialPO.CreateTime},
-			UpdateTime: &models.JSONTime{socialPO.UpdateTime},
-		}
-		socialVOs = append(socialVOs, social)
-	}
-	reply.CreateJSONModels(c, socialVOs)
 }

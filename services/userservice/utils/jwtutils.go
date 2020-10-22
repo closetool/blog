@@ -7,8 +7,8 @@ import (
 	"github.com/closetool/blog/services/userservice/models/po"
 	"github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/system/constants"
-	"github.com/closetool/blog/system/log"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/sirupsen/logrus"
 )
 
 func GenerateToken(userPO *po.AuthUser) (string, error, int64) {
@@ -23,7 +23,7 @@ func GenerateToken(userPO *po.AuthUser) (string, error, int64) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, user)
 	ss, err := token.SignedString([]byte(psw))
 	if err != nil {
-		log.Logger.Errorf("generate jwt string failed: %v", err)
+		logrus.Errorf("generate jwt string failed: %v", err)
 	}
 	return ss, err, user.ExpiresAt
 }
@@ -36,7 +36,7 @@ func VerifyToken(tokenString, key string) bool {
 		return []byte(key), nil
 	})
 	if err != nil {
-		log.Logger.Errorf("token is invalid: %v", err)
+		logrus.Errorf("token is invalid: %v", err)
 		return false
 	}
 	user, ok := token.Claims.(*vo.AuthUser)

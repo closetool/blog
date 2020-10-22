@@ -185,7 +185,8 @@ CREATE TABLE `closetool_category` (
   `create_by` bigint(20) DEFAULT NULL COMMENT '创建人',
   `update_time` datetime NOT NULL COMMENT '更新时间',
   `update_by` bigint(20) DEFAULT NULL COMMENT '更新人',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY(`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -442,7 +443,8 @@ CREATE TABLE `closetool_tags` (
   `create_by` bigint(20) DEFAULT NULL COMMENT '创建人',
   `update_time` datetime NOT NULL COMMENT '更新时间',
   `update_by` bigint(20) DEFAULT NULL COMMENT '更新人',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY(`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT COMMENT='标签表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 

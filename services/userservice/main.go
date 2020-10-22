@@ -9,7 +9,8 @@ import (
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/exit"
 	"github.com/closetool/blog/system/initial"
-	"github.com/closetool/blog/system/log"
+	"github.com/closetool/blog/system/messaging"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -27,17 +28,22 @@ func main() {
 		viper.GetString("branch"),
 	)
 
-	log.InitLog()
+	initial.InitLog()
 
 	db.DbInit(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserLog{}, &po.AuthUserSocial{})
 	db.SyncTables(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserLog{}, &po.AuthUserSocial{})
 
 	r := initial.InitServer(service.Routes, "/auth")
 
+	messaging.Client = new(messaging.MessagingClient)
+	messaging.Client.ConnectToBroker(viper.GetString("amqp_location"))
+	//FIXME
+	service.TokenHandler()
+
 	exit.Listen(func() {})
 
 	err := r.Run(fmt.Sprintf(":%d", viper.GetInt("service_port")))
 	if err != nil {
-		log.Logger.Errorf("An err occurred when service running: %v", err)
+		logrus.Errorf("An err occurred when service running: %v", err)
 	}
 }

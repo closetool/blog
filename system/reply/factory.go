@@ -13,7 +13,7 @@ func CreateWithError() *Reply {
 
 func CreateWithErrorX(errCode int) *Reply {
 	reply := createWithErrorFlag()
-	reply.ReplyCode = handleErrCode(errCode)
+	reply.ReplyCode = HandleErrCode(errCode)
 	reply.Message = getMessage(errCode)
 	return reply
 }
@@ -27,12 +27,12 @@ func createWithErrorFlag() *Reply {
 func CreateWithSuccess() *Reply {
 	return &Reply{
 		Success:   1,
-		ReplyCode: handleErrCode(Success),
+		ReplyCode: HandleErrCode(Success),
 		Message:   getMessage(Success),
 	}
 }
 
-func handleErrCode(errCode int) string {
+func HandleErrCode(errCode int) string {
 	return fmt.Sprintf("%05d", errCode)
 }
 

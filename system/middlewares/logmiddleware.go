@@ -3,8 +3,8 @@ package middlewares
 import (
 	"time"
 
-	"github.com/closetool/blog/system/log"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func LogToFile() gin.HandlerFunc {
@@ -19,6 +19,6 @@ func LogToFile() gin.HandlerFunc {
 		//	c.ClientIP(),
 		//	c.Request.Method,
 		//	c.Request.RequestURI)
-		log.Logger.Infof("| %-7s | %-3d | %-20s | %-13v | %-s |\n", c.Request.Method, c.Writer.Status(), c.Request.URL, latency, c.ClientIP())
+		logrus.Infof("| %-7s | %-3d | %-20s | %-13v | %-s |", c.Request.Method, c.Writer.Status(), c.Request.URL, latency, c.ClientIP())
 	}
 }
