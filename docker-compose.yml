@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3"
 
 services:
     viz:
@@ -7,24 +7,24 @@ services:
             - "8080:8080/tcp"
         volumes: 
             - "/var/run/docker.sock:/var/run/docker.sock"
-        #deploy:
-        #    placement:
-        #        constranints:
-        #            - "node.role==manager"
+        deploy:
+            replicas: 1
+            placement:
+                constraints: [node.role==manager]
 
     mysql:
-        build: support/mysql/
+        image: closetool/mysql
         ports:
             - "3306:3306"
         networks:
-            - blog
+            - overlay
         deploy:
             replicas: 1
     
     rabbitmq: 
-        build: support/rabbitmq/
+        image: closetool/rabbitmq
         networks:
-            - blog
+            - overlay
         ports:
             - "1883:1883" 
             - "5672:5672" 
@@ -32,12 +32,12 @@ services:
         deploy:
             replicas: 1
 
-    springcloud:
-        build: support/config-server/
+    configserver:
+        image: closetool/configserver
         depends_on:
             - rabbitmq
         networks:
-            - blog
+            - overlay
         ports:
             - "8888:8888"
         #update_config:
@@ -47,24 +47,24 @@ services:
             replicas: 1
 
     nginx:
-        build: support/nginx/
+        image: closetool/nginx
         depends_on: 
             - musicservice
             - userservice
             - categoryservice
         networks:
-            - blog
+            - overlay
         ports:
             - "9000:9000"
         deploy:
             replicas: 1
 
     musicservice:
-        build: services/musicservice
+        image: closetool/musicservice
         depends_on:
             - springcloud
         networks:
-            - blog
+            - overlay
         ports:
             - "2599:2599"
         deploy:
@@ -72,20 +72,20 @@ services:
     
     
     userservice:
-        build: services/userservice
+        image: closetool/userservice
         depends_on:
             - springcloud
             - mysql
             - rabbitmq
         networks:
-            - blog
+            - overlay
         ports:
             - "2600:2600"
         deploy:
             replicas: 1
 
     categoryservice:
-        build: services/categoryservice
+        image: closetool/categoryservice
         depends_on:
             - springcloud
             - mysql
@@ -94,7 +94,7 @@ services:
         links: 
             - userservice
         networks:
-            - blog
+            - overlay
         ports:
             - "2601:2601"
         deploy:
@@ -102,4 +102,4 @@ services:
     
 
 networks:
-    blog:
+    overlay:
