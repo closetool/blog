@@ -6,11 +6,11 @@ services:
         ports: 
             - "8080:8080/tcp"
         volumes: 
-            - "var/run/docker.sock:var/run/docker.sock "
-        deploy:
-            placement:
-                constranints:
-                    - "node.role==manager"
+            - "/var/run/docker.sock:/var/run/docker.sock "
+        #deploy:
+        #    placement:
+        #        constranints:
+        #            - "node.role==manager"
 
     mysql:
         build: support/mysql/
@@ -40,9 +40,9 @@ services:
             - blog
         ports:
             - "8888:8888"
-        update_config:
-            delay: 10s
-            parallelism: 1
+        #update_config:
+        #    delay: 10s
+        #    parallelism: 1
         deploy:
             replicas: 1
 
@@ -54,7 +54,43 @@ services:
             - "9000:9000"
         deploy:
             replicas: 1
+
+    musicservice:
+        build: services/musicservice
+        depends_on:
+            - springcloud
+        networks:
+            - blog
+        ports:
+            - "2599:2599"
+        deploy:
+            replicas: 1
     
+    
+    userservice:
+        build: services/userservice
+        depends_on:
+            - springcloud
+            - mysql
+        networks:
+            - blog
+        ports:
+            - "2600:2600"
+        deploy:
+            replicas: 1
+
+    categoryservice:
+        build: services/categoryservice
+        depends_on:
+            - springcloud
+            - mysql
+            - userservice
+        networks:
+            - blog
+        ports:
+            - "2600:2600"
+        deploy:
+            replicas: 1
     
 
 networks:
