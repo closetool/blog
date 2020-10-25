@@ -1,4 +1,4 @@
-varsion: "3.8"
+version: "3.3"
 
 services:
     viz:
@@ -6,7 +6,7 @@ services:
         ports: 
             - "8080:8080/tcp"
         volumes: 
-            - "/var/run/docker.sock:/var/run/docker.sock "
+            - "/var/run/docker.sock:/var/run/docker.sock"
         #deploy:
         #    placement:
         #        constranints:
@@ -48,6 +48,10 @@ services:
 
     nginx:
         build: support/nginx/
+        depends_on: 
+            - musicservice
+            - userservice
+            - categoryservice
         networks:
             - blog
         ports:
@@ -72,6 +76,7 @@ services:
         depends_on:
             - springcloud
             - mysql
+            - rabbitmq
         networks:
             - blog
         ports:
@@ -84,11 +89,14 @@ services:
         depends_on:
             - springcloud
             - mysql
+            - rabbitmq
+            - userservice
+        links: 
             - userservice
         networks:
             - blog
         ports:
-            - "2600:2600"
+            - "2601:2601"
         deploy:
             replicas: 1
     
