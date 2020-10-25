@@ -7,6 +7,7 @@ import (
 	"github.com/closetool/blog/system/config"
 	"github.com/closetool/blog/system/exit"
 	"github.com/closetool/blog/system/initial"
+	"github.com/closetool/blog/utils/routeutils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -29,7 +30,8 @@ func main() {
 
 	initial.InitLog()
 
-	r := initial.InitServer(service.Routes, "/music")
+	r := initial.InitServer()
+	routeutils.RegisterRoute(service.Routes, r.Group("/music"))
 
 	exit.Listen(func() {})
 

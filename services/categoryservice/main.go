@@ -10,6 +10,7 @@ import (
 	"github.com/closetool/blog/system/exit"
 	"github.com/closetool/blog/system/initial"
 	"github.com/closetool/blog/system/messaging"
+	"github.com/closetool/blog/utils/routeutils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -33,7 +34,9 @@ func main() {
 	db.DbInit(&po.Category{}, &po.CategoryTags{}, &po.Tags{})
 	db.SyncTables(&po.Category{}, &po.CategoryTags{}, &po.Tags{})
 
-	r := initial.InitServer(service.CategoryRoutes, "/category")
+	r := initial.InitServer()
+	routeutils.RegisterRoute(service.CategoryRoutes, r.Group("/category"))
+	routeutils.RegisterRoute(service.TagsRoutes, r.Group("/tags"))
 
 	messaging.Client = new(messaging.MessagingClient)
 	messaging.Client.ConnectToBroker(viper.GetString("amqp_location"))

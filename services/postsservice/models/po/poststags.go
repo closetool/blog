@@ -1,10 +1,10 @@
-package models
+package po
 
 import (
 	"time"
 )
 
-type ClosetoolPostsTags struct {
+type PostsTags struct {
 	Id         int64     `xorm:"pk autoincr BIGINT(20)"`
 	TagsId     int64     `xorm:"not null comment('名称') BIGINT(32)"`
 	PostsId    int64     `xorm:"not null comment('文章主键') BIGINT(20)"`

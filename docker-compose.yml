@@ -1,0 +1,61 @@
+varsion: "3.8"
+
+services:
+    viz:
+        image: dockersamples/visualizer
+        ports: 
+            - "8080:8080/tcp"
+        volumes: 
+            - "var/run/docker.sock:var/run/docker.sock "
+        deploy:
+            placement:
+                constranints:
+                    - "node.role==manager"
+
+    mysql:
+        build: support/mysql/
+        ports:
+            - "3306:3306"
+        networks:
+            - blog
+        deploy:
+            replicas: 1
+    
+    rabbitmq: 
+        build: support/rabbitmq/
+        networks:
+            - blog
+        ports:
+            - "1883:1883" 
+            - "5672:5672" 
+            - "15672:15672"
+        deploy:
+            replicas: 1
+
+    springcloud:
+        build: support/config-server/
+        depends_on:
+            - rabbitmq
+        networks:
+            - blog
+        ports:
+            - "8888:8888"
+        update_config:
+            delay: 10s
+            parallelism: 1
+        deploy:
+            replicas: 1
+
+    nginx:
+        build: support/nginx/
+        networks:
+            - blog
+        ports:
+            - "9000:9000"
+        deploy:
+            replicas: 1
+    
+    
+
+networks:
+    blog:

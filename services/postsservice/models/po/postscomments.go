@@ -1,10 +1,10 @@
-package models
+package po
 
 import (
 	"time"
 )
 
-type ClosetoolPostsComments struct {
+type PostsComments struct {
 	Id         int64     `xorm:"pk autoincr BIGINT(20)"`
 	AuthorId   int64     `xorm:"not null BIGINT(20)"`
 	Content    string    `xorm:"not null VARCHAR(255)"`

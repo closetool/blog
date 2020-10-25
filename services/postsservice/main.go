@@ -3,8 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/closetool/blog/services/userservice/models/po"
-	"github.com/closetool/blog/services/userservice/service"
+	"github.com/closetool/blog/services/postsservice/models/po"
 	"github.com/closetool/blog/system/config"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/exit"
@@ -15,11 +14,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-var appName = "userservice"
+var appName = "postsservice"
 
 func main() {
-	//logrus.SetLevel(logrus.DebugLevel)
-
 	initial.InitConfig(appName)
 
 	config.LoadConfigurationFromBranch(
@@ -29,18 +26,19 @@ func main() {
 		viper.GetString("branch"),
 	)
 
+	//viper.Set("log_level", )
+
 	initial.InitLog()
 
-	db.DbInit(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserLog{}, &po.AuthUserSocial{})
-	db.SyncTables(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserLog{}, &po.AuthUserSocial{})
+	db.DbInit(&po.Posts{}, &po.PostsTags{}, &po.PostsAttribute{}, &po.PostsComments{})
+	db.SyncTables(&po.Posts{}, &po.PostsTags{}, &po.PostsAttribute{}, &po.PostsComments{})
 
 	r := initial.InitServer()
-	routeutils.RegisterRoute(service.Routes, r.Group("/auth"))
+	//TODO
+	routeutils.RegisterRoute(nil, r.Group("posts"))
 
 	messaging.Client = new(messaging.MessagingClient)
 	messaging.Client.ConnectToBroker(viper.GetString("amqp_location"))
-	//FIXME
-	service.TokenHandler()
 
 	exit.Listen(func() {})
 
