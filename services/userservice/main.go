@@ -5,6 +5,7 @@ import (
 
 	"github.com/closetool/blog/services/userservice/models/po"
 	"github.com/closetool/blog/services/userservice/service"
+	"github.com/closetool/blog/services/userservice/service/amqp"
 	"github.com/closetool/blog/system/config"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/exit"
@@ -40,7 +41,7 @@ func main() {
 	messaging.Client = new(messaging.MessagingClient)
 	messaging.Client.ConnectToBroker(viper.GetString("amqp_location"))
 	//FIXME
-	service.TokenHandler()
+	amqp.VerifyToken()
 
 	exit.Listen(func() {})
 

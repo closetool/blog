@@ -2,7 +2,7 @@
 
 [![Build Status](https://www.travis-ci.org/closetool/blog.svg?branch=master)](https://www.travis-ci.org/closetool/blog) [![LICENSE](https://img.shields.io/github/license/closetool/blog)](https://github.com/closetool/blog)
 ---
-对[plumemo](https://github.com/byteblogs168/plumemo)项目后端的重构，使其成为了微服务后端，配合对应前端使用[theme-react-sakura](https://github.com/byteblogs168/theme-react-sakura/)/[plumemo-admin](https://github.com/byteblogs168/plumemo-admin)
+对[plumemo](https://github.com/byteblogs168/plumemo)项目后端的重构，使其成为了微服务后端，配合对应前端使用[theme-react-sakura](https://github.com/byteblogs168/theme-react-sakura/)/[plumemo-admin](https://github.com/byteblogs168/plumemo-admin)(部分api需要修改，见下方)
 
 ## 运用的技术
 
@@ -18,23 +18,42 @@
 * nginx(反向代理，微服务网关)
 * rabbitmq(消息总线)
 
-## 全局
+## 部署
 
-* 使用脚本部署组件前先登录仓库并设置环境变量ALIYUN(registry.cn-hangzhou.aliyuncs.com/)
-* 安装configserver前要先装rabbitmq
-* configserver依赖jdk8
-* 配置中心地址（http://localhost:8888）,profile,branch通过配置文件配置
-* 配置文件位于./,$HOME/config,/$HOME/${servicename}/ or /etc/${servicename}目录下，名字为config.yml或${servicename}.yml
+* 安装jdk8和go1.13.x
+* git clone --depth=1 https://github.com/closetool/blog
+* 给根目录和scripts目录下的脚本和support/config-server/gradlew添加执行权限(chmod a+x *.sh scripts/*.sh support/config-server/gradlew)
+* 先修改根目录下的config.yml，config.yml描述了configserver的位置和config branch/profile
+* 运行buildall.sh脚本
+* docker stack deploy --compose-file docker-compose.yml '集群名' 
+
+## 配置中心
+
 * 配置中心中必有service_port,service_name
-* log_file_path默认为./,log_file_name默认为${servicename}_${time}.log
-* log_level默认为4(info)
+* 配置中心使用log_file_path(default:logs)和log_file_name(default:appName_localTime.log)指定log文件的位置和名字
+* 使用log_level修改日志输出级别(default:4 info)
 
 ## Music Service
-* 特有config属性music_playlist_id(网易云歌单id)
+* 需要music_playlist_id(网易云歌单id)
 * 服务端口配置为2599
+
 ## User Service
-* 因为[issue#338](https://github.com/gin-gonic/gin/issues/388)使`/social/v1/socials` `/social/v1/info` `/social/v1/list`与`social/v1/:id`无法兼容，将前三个路由v1改为v2
-* 需要数据库支持，先进入根目录运行./mysql.sh脚本搭建mysql环境
+> * /social/v1/list \> /list/v1/social</br> 
+> * /social/v1/info \> /info/v1/social</br>
+> * /social/v1/socials \> /socials/v1/social
+
+## Category Service
+
+### category
+> * /category-tags/v1/list \> /list/v1/category-tags</br>
+> * /category/v1/list \> /list/v1/category
+### tags
+> * /tags/v1/list \> /list/v1/tags
+
+## AMQP
+
+### user service
+* VerifyToken body为vo.AuthUser的json串，验证token的正确性，如果正确回传相应的用户对象
 
 ## FIXME
 * docker swarm中不同node之间的同一overlay网络中的容器无法互相访问，nginx代理只能使用公网

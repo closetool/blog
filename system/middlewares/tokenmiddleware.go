@@ -21,9 +21,9 @@ func UserToken(c *gin.Context) {
 		noPrivilege(c)
 		return
 	}
-	obj := map[string]string{constants.AuthHeader: header}
+	obj := vo.AuthUser{Token: header}
 	bt, _ := jsoniter.Marshal(obj)
-	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, viper.GetString("amqp_token"))
+	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, viper.GetString("amqp_verifyToken"))
 	if err != nil {
 		noPrivilege(c)
 		return
@@ -45,9 +45,9 @@ func AdminToken(c *gin.Context) {
 		noPrivilege(c)
 		return
 	}
-	obj := map[string]string{constants.AuthHeader: header}
+	obj := vo.AuthUser{Token: header}
 	bt, _ := jsoniter.Marshal(obj)
-	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, viper.GetString("amqp_token"))
+	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, viper.GetString("amqp_verifyToken"))
 	if err != nil {
 		logrus.Errorf("send message to mq failed: %v", err)
 		noPrivilege(c)

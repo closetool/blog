@@ -34,8 +34,8 @@ var Routes = []models.Route{
 	{Method: "DELETE", Pattern: "/social/v1/:id", MiddleWare: nil, HandlerFunc: transaction.Wrapper(delSocial)},
 	//FIXME
 	//{Method: "GET", Pattern: "/social/v1/list", MiddleWare: gin.HandlersChain{middlewares.AdminToken}, HandlerFunc: getSocialList},
-	{Method: "GET", Pattern: "/social/v2/list", MiddleWare: gin.HandlersChain{middlewares.AdminToken}, HandlerFunc: getSocialList},
+	{Method: "GET", Pattern: "/list/v1/social", MiddleWare: gin.HandlersChain{middlewares.AdminToken}, HandlerFunc: getSocialList},
 	//TODO
-	{Method: "GET", Pattern: "/social/v2/socials", MiddleWare: nil, HandlerFunc: getSocialEnableList},
-	{Method: "GET", Pattern: "/social/v2/info", MiddleWare: nil, HandlerFunc: getSocialInfo},
+	{Method: "GET", Pattern: "/socials/v1/social", MiddleWare: nil, HandlerFunc: getSocialEnableList},
+	{Method: "GET", Pattern: "/info/v1/social", MiddleWare: nil, HandlerFunc: getSocialInfo},
 }

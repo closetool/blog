@@ -239,8 +239,9 @@ func saveUserByGithub(c *gin.Context) error {
 }
 
 func registerAdminByGithub(c *gin.Context) error {
+	logrus.Debugln("/auth/admin/v1/register was called")
 	userVO := vo.CreateDefaultAuthUser()
-	err := c.BindJSON(userVO)
+	err := c.ShouldBindJSON(userVO)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
 		logrus.Errorf("could not bind parameters: %v", err)

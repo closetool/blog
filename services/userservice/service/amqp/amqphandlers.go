@@ -1,4 +1,4 @@
-package service
+package amqp
 
 import (
 	"time"
@@ -6,7 +6,6 @@ import (
 	"github.com/closetool/blog/services/userservice/models/po"
 	"github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/services/userservice/utils"
-	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/messaging"
 	"github.com/closetool/blog/system/reply"
@@ -17,9 +16,11 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func TokenHandler() {
-	messaging.Client.SubscribeToQueueAndReply(viper.GetString("amqp_token"), viper.GetString("amqp_token"), func(a amqp.Delivery) []byte {
-		header := jsoniter.Get(a.Body, constants.AuthHeader).ToString()
+func VerifyToken() {
+	messaging.Client.SubscribeToQueueAndReply(viper.GetString("amqp_verifyToken"), viper.GetString("amqp_verifyToken"), func(a amqp.Delivery) []byte {
+		amqpUser := vo.AuthUser{}
+		jsoniter.Get(a.Body).ToVal(amqpUser)
+		header := amqpUser.Token
 		if header == "" {
 			return errorReply()
 		}
