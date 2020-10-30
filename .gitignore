@@ -5,3 +5,4 @@ build/
 *.log
 *-linux-amd64
 logs
+services/*/config.yml
