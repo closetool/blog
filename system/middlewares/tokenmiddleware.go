@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 func UserToken(c *gin.Context) {
@@ -23,7 +22,7 @@ func UserToken(c *gin.Context) {
 	}
 	obj := vo.AuthUser{Token: header}
 	bt, _ := jsoniter.Marshal(obj)
-	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, viper.GetString("amqp_verifyToken"))
+	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, "auth.verifyToken")
 	if err != nil {
 		noPrivilege(c)
 		return
@@ -47,7 +46,7 @@ func AdminToken(c *gin.Context) {
 	}
 	obj := vo.AuthUser{Token: header}
 	bt, _ := jsoniter.Marshal(obj)
-	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, viper.GetString("amqp_verifyToken"))
+	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, "auth.verifyToken")
 	if err != nil {
 		logrus.Errorf("send message to mq failed: %v", err)
 		noPrivilege(c)

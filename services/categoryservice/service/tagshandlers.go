@@ -35,16 +35,17 @@ func getTagsList(c *gin.Context) {
 
 	session := db.DB.NewSession()
 	if tagsVO.Keywords != "" {
-		session.Where("name like ?", "%"+tagsVO.Keywords+"%")
+		session = session.Where("name like ?", "%"+tagsVO.Keywords+"%")
 	}
 	if tagsVO.Name != "" {
-		session.Where("name = ?", tagsVO.Name)
+		session = session.Where("name = ?", tagsVO.Name)
 	}
 
 	page := pageutils.CheckAndInitPage(tagsVO.BaseVO)
 	tagsPOs := make([]*po.Tags, 0)
 
-	if err := session.Limit(pageutils.StartAndEnd(page)).Find(&tagsPOs); err != nil {
+	var err error
+	if page.Total, err = session.Limit(pageutils.StartAndEnd(page)).FindAndCount(&tagsPOs); err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return
 	}

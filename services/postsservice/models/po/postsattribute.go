@@ -5,3 +5,7 @@ type PostsAttribute struct {
 	Content string `xorm:"not null comment('内容') LONGTEXT"`
 	PostsId int64  `xorm:"not null comment('文章表主键') BIGINT(20)"`
 }
+
+func (p PostsAttribute) TableName() string {
+	return "closetool_posts_attribute"
+}

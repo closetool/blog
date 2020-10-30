@@ -9,6 +9,6 @@ type Category struct {
 	CreateTime *models.JSONTime `form:"createTime" json:"createTime,omitempty"`
 	UpdateTime *models.JSONTime `form:"updateTime" json:"updateTime,omitempty"`
 	TagsList   []*Tags          `form:"tagsList" json:"tagsList,omitempty"`
-	Total      int              `form:"total" json:"total,omitempty"`
+	Total      int64            `form:"total" json:"total,omitempty"`
 	*models.BaseVO
 }

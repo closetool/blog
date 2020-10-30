@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
 )
 
 func CreateWithError() *Reply {
@@ -78,4 +79,28 @@ func CreateJSONPaging(c *gin.Context, models []interface{}, page *PageInfo) {
 
 func CreateJSONsuccess(c *gin.Context) {
 	c.JSON(http.StatusOK, CreateWithSuccess())
+}
+
+func ErrorBytes(errorCode int) []byte {
+	bytes, err := jsoniter.Marshal(CreateWithErrorX(errorCode))
+	if err != nil {
+		return nil
+	}
+	return bytes
+}
+
+func ModelBytes(model interface{}) []byte {
+	bytes, err := jsoniter.Marshal(CreateWithModel(model))
+	if err != nil {
+		return nil
+	}
+	return bytes
+}
+
+func ModelsBytes(models []interface{}) []byte {
+	bytes, err := jsoniter.Marshal(CreateWithModels(models))
+	if err != nil {
+		return nil
+	}
+	return bytes
 }

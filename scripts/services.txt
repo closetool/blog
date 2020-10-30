@@ -1,1 +1,1 @@
-musicservice userservice categoryservice
+musicservice userservice categoryservice logservice postsservice

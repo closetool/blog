@@ -138,7 +138,7 @@ func getUserList(c *gin.Context) {
 	if userVO.Status != -1 {
 		session = session.Where("status = ?", userVO.Status)
 	}
-	session.Limit(pageutils.StartAndEnd(page))
+	session = session.Limit(pageutils.StartAndEnd(page))
 
 	users := make([]*po.AuthUser, 0)
 	count, err := session.FindAndCount(&users)
@@ -636,7 +636,7 @@ func socialList(c *gin.Context, enabled int) {
 		reply.CreateJSONError(c, reply.ParamError)
 	}
 
-	if enabled == 0 || enabled == 1 {
+	if enabled == 1 {
 		socialVO.IsEnabled = enabled
 	}
 
@@ -644,28 +644,28 @@ func socialList(c *gin.Context, enabled int) {
 	session := db.DB.NewSession()
 
 	if socialVO.BaseVO != nil && socialVO.Keywords != "" {
-		session.Where("code like ?", "%"+socialVO.Keywords+"%")
+		session = session.Where("code like ?", "%"+socialVO.Keywords+"%")
 	}
 	if socialVO.Code != "" {
-		session.Where("code = ?", socialVO.Code)
+		session = session.Where("code = ?", socialVO.Code)
 	}
 	if socialVO.Content != "" {
-		session.Where("content = ?", socialVO.Content)
+		session = session.Where("content = ?", socialVO.Content)
 	}
 	if socialVO.ShowType != 0 {
-		session.Where("show_type = ?", socialVO.ShowType)
+		session = session.Where("show_type = ?", socialVO.ShowType)
 	}
 	if socialVO.Remark != "" {
-		session.Where("remark = ?", socialVO.Remark)
+		session = session.Where("remark = ?", socialVO.Remark)
 	}
 	if socialVO.IsEnabled != -1 {
-		session.Where("is_enabled = ?", socialVO.IsEnabled)
+		session = session.Where("is_enabled = ?", socialVO.IsEnabled)
 	}
 	if socialVO.IsHome != -1 {
-		session.Where("is_home = ?", socialVO.IsHome)
+		session = session.Where("is_home = ?", socialVO.IsHome)
 	}
-	session.Limit(pageutils.StartAndEnd(page))
-	session.OrderBy("id")
+	session = session.Limit(pageutils.StartAndEnd(page))
+	session = session.OrderBy("id")
 
 	lists := make([]po.AuthUserSocial, 0)
 	if err = session.Find(&lists); err != nil {

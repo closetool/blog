@@ -50,11 +50,6 @@
 ### tags
 > * /tags/v1/list \> /list/v1/tags
 
-## AMQP
-
-### user service
-* VerifyToken body为vo.AuthUser的json串，验证token的正确性，如果正确回传相应的用户对象
-
 ## FIXME
 * docker swarm中不同node之间的同一overlay网络中的容器无法互相访问，nginx代理只能使用公网
 * gin框架中不支持注册spring中的requestmapping，只能为路由多次注册不同方法

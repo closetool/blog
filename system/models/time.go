@@ -28,7 +28,6 @@ func (t JSONTime) Value() (driver.Value, error) {
 
 // Scan valueof time.Time
 func (t *JSONTime) Scan(v interface{}) error {
-
 	switch value := v.(type) {
 	case int64:
 		t.Time = time.Unix(value, 0)

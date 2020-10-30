@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/closetool/blog/services/postsservice/models/po"
+	"github.com/closetool/blog/services/postsservice/service"
+	"github.com/closetool/blog/services/postsservice/service/amqp"
 	"github.com/closetool/blog/system/config"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/exit"
@@ -26,7 +28,7 @@ func main() {
 		viper.GetString("branch"),
 	)
 
-	//viper.Set("log_level", )
+	viper.Set("log_level", fmt.Sprintf("%d", logrus.DebugLevel))
 
 	initial.InitLog()
 
@@ -35,10 +37,13 @@ func main() {
 
 	r := initial.InitServer()
 	//TODO
-	routeutils.RegisterRoute(nil, r.Group("posts"))
+	routeutils.RegisterRoute(service.PostsRoutes, r.Group("posts"))
 
 	messaging.Client = new(messaging.MessagingClient)
 	messaging.Client.ConnectToBroker(viper.GetString("amqp_location"))
+
+	amqp.GetTagsIDAndCount()
+	amqp.GetCategoryIDAndCount()
 
 	exit.Listen(func() {})
 

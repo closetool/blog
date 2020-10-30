@@ -2,6 +2,7 @@ package messaging
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/closetool/blog/utils/collectionsutils"
 	"github.com/sirupsen/logrus"
@@ -9,6 +10,7 @@ import (
 )
 
 var Client IMessagingClient
+var TimeEX error = fmt.Errorf("time exceed")
 
 // Defines our interface for connecting and consuming messages.
 type IMessagingClient interface {
@@ -115,7 +117,7 @@ func (m *MessagingClient) PublishOnQueue(body []byte, queueName string) error {
 			ContentType: "application/json",
 			Body:        body, // Our JSON body as []byte
 		})
-	logrus.Debugf("A message was sent to queue %v: %v", queueName, body)
+	logrus.Debugf("A message was sent to queue %v: %v", queueName, string(body))
 	return err
 }
 
@@ -171,15 +173,20 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 
 	logrus.Debugf("A message was sent to queue %v: %v", queueName, string(body))
 
+	tmr := time.NewTimer(3)
+
 	var res []byte
-	for d := range msgs {
-		if corrId == d.CorrelationId {
-			res = d.Body
-			return res, err
+	for {
+		select {
+		case d := <-msgs:
+			if corrId == d.CorrelationId {
+				res = d.Body
+				return res, err
+			}
+		case <-tmr.C:
+			return nil, TimeEX
 		}
 	}
-
-	return res, err
 }
 
 func (m *MessagingClient) Subscribe(exchangeName string, exchangeType string, consumerName string, handlerFunc func(amqp.Delivery)) error {
@@ -226,7 +233,7 @@ func (m *MessagingClient) Subscribe(exchangeName string, exchangeType string, co
 	msgs, err := ch.Consume(
 		queue.Name,   // queue
 		consumerName, // consumer
-		false,        // auto-ack
+		true,         // auto-ack
 		false,        // exclusive
 		false,        // no-local
 		false,        // no-wait
@@ -256,7 +263,7 @@ func (m *MessagingClient) SubscribeToQueue(queueName string, consumerName string
 	msgs, err := ch.Consume(
 		queue.Name,   // queue
 		consumerName, // consumer
-		false,        // auto-ack
+		true,         // auto-ack
 		false,        // exclusive
 		false,        // no-local
 		false,        // no-wait
@@ -286,7 +293,7 @@ func (m *MessagingClient) SubscribeToQueueAndReply(queueName string, consumerNam
 	msgs, err := ch.Consume(
 		queue.Name,   // queue
 		consumerName, // consumer
-		false,        // auto-ack
+		true,         // auto-ack
 		false,        // exclusive
 		false,        // no-local
 		false,        // no-wait

@@ -32,8 +32,8 @@ func main() {
 
 	initial.InitLog()
 
-	db.DbInit(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserLog{}, &po.AuthUserSocial{})
-	db.SyncTables(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserLog{}, &po.AuthUserSocial{})
+	db.DbInit(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserSocial{})
+	db.SyncTables(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserSocial{})
 
 	r := initial.InitServer()
 	routeutils.RegisterRoute(service.Routes, r.Group("/auth"))
@@ -42,6 +42,7 @@ func main() {
 	messaging.Client.ConnectToBroker(viper.GetString("amqp_location"))
 	//FIXME
 	amqp.VerifyToken()
+	amqp.GetUserNameById()
 
 	exit.Listen(func() {})
 

@@ -333,9 +333,9 @@ func TestGetSocial(t *testing.T) {
 }
 
 func TestGetSocialList(t *testing.T) {
-	Convey("Given a request to /auth/social/v2/list", t, func() {
+	Convey("Given a request to /auth/list/v1/social", t, func() {
 		token, _ := generateAdminToken()
-		req := httptest.NewRequest("GET", "/auth/social/v2/list", nil)
+		req := httptest.NewRequest("GET", "/auth/list/v1/social?page=2&size=1", nil)
 
 		req.Header.Set(constants.AuthHeader, token)
 		resp := httptest.NewRecorder()
@@ -351,9 +351,9 @@ func TestGetSocialList(t *testing.T) {
 }
 
 func TestGetSocialInfo(t *testing.T) {
-	Convey("Given a request to /auth/social/v2/info", t, func() {
+	Convey("Given a request to /auth/info/v1/social", t, func() {
 		token, _ := generateAdminToken()
-		req := httptest.NewRequest("GET", "/auth/social/v2/info", nil)
+		req := httptest.NewRequest("GET", "/auth/info/v1/social", nil)
 
 		req.Header.Set(constants.AuthHeader, token)
 		resp := httptest.NewRecorder()

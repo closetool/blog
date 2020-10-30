@@ -1,0 +1,46 @@
+## USER
+
+* VerifyToken
+> queue name: auth.verifyToken
+> request: {"Authorization":token}
+> response: {"model":vo.Authuser}
+
+* GetUserNameById
+> queue name: auth.getUserNameById
+> request: [id1,id2...]
+> response: {"model":{"id1":"username1","id2":"username2"}}
+
+## CATEGORY
+
+* GetCategoryNameById
+> queue name: category.getCategoryNameById
+> request: [id1,id2...]
+> response: {"model":{"id1":"categoryname1","id2":"categoryname2"}}
+
+* GetTagsByName
+> queue name: tags.getTagsByName
+> request: "tagsName"
+> response: {"model":{"id":tags_id,"name":tags_name}}
+
+* GetTagsByIds
+> queue name: tags.getTagsByIds
+> request: [id1,id2,...]
+> response: {"models":[{"id":tags_id,"name":tags_name}...]}
+
+## POSTS
+
+* GetTagsIDAndCount
+> queue name: posts.tags.getTagsIDAndCount
+> request: 无参数
+> response: 返回以tags_id为键，posts数为值的数组
+
+* GetCategoryIDAndCount
+> queue name: posts.getCategoryIDAndCount
+> request: 无参数
+> response: 返回以category_id为见，posts数为值的数组
+
+## LOGS
+
+* SaveLogs
+> queue name: logs.saveLogs
+> request: JSON(vo.AuthUserLog)
