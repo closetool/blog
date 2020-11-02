@@ -2,7 +2,7 @@
 
 * VerifyToken
 > queue name: auth.verifyToken
-> request: {"Authorization":token}
+> request: "token"
 > response: {"model":vo.Authuser}
 
 * GetUserNameById
@@ -27,6 +27,11 @@
 > request: [id1,id2,...]
 > response: {"models":[{"id":tags_id,"name":tags_name}...]}
 
+* AddTags
+> queue name: tags.addTags
+> request: [vo.Tags,vo.Tags]
+> response: {"models":[id1,id2...]}
+
 ## POSTS
 
 * GetTagsIDAndCount
@@ -44,3 +49,8 @@
 * SaveLogs
 > queue name: logs.saveLogs
 > request: JSON(vo.AuthUserLog)
+
+* GetParamGroupByCode
+> queue name: logs.getParamGroupByCode
+> request: "Code"
+> response: {"models":[]vo.AuthUserLog{Paramter:"...",Code:"..."}}

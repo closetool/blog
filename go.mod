@@ -3,6 +3,7 @@ module github.com/closetool/blog
 go 1.13
 
 require (
+	github.com/anaskhan96/soup v1.2.4
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gbrlsnchs/jwt/v3 v3.0.0
@@ -10,6 +11,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-xorm/xorm v0.7.9
 	github.com/golang/mock v1.4.4
+	github.com/gomarkdown/markdown v0.0.0-20201030010234-8ba61b39d0e4
 	github.com/gookit/color v1.3.1 // indirect
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/jinzhu/gorm v1.9.16
@@ -24,12 +26,14 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/streadway/amqp v1.0.0
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.6.1
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
 	github.com/vektra/mockery/v2 v2.3.0 // indirect
 	github.com/xxjwxc/gormt v0.0.0-20200928171410-02ae0bc01c67 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0 // indirect
+	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102 // indirect
+	golang.org/x/text v0.3.4 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	gorm.io/driver/mysql v1.0.2 // indirect

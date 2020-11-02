@@ -126,6 +126,10 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 		panic("Tried to send message before connection was initialized. Don't do that.")
 	}
 	ch, err := m.conn.Channel() // Get a channel from the connection
+	if err != nil {
+		logrus.Errorf("amqp: open channel failed: %v", err)
+		return nil, err
+	}
 	defer ch.Close()
 
 	queue, err := ch.QueueDeclare( // Declare a queue that will be created if not exists with some args
@@ -137,6 +141,11 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 		nil,       // arguments
 	)
 
+	if err != nil {
+		logrus.Errorf("amqp: declare queue failed: %v", err)
+		return nil, err
+	}
+
 	replyQueue, err := ch.QueueDeclare(
 		"",
 		false,
@@ -145,6 +154,11 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 		false,
 		nil,
 	)
+
+	if err != nil {
+		logrus.Errorf("amqp: declare queue failed: %v", err)
+		return nil, err
+	}
 
 	msgs, err := ch.Consume(
 		replyQueue.Name, // queue
@@ -156,6 +170,10 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 		nil,             // args
 	)
 
+	if err != nil {
+		logrus.Errorf("amqp: declare consume failed: %v", err)
+		return nil, err
+	}
 	corrId := string(collectionsutils.RandomString(32))
 
 	// Publishes a message onto the queue.
@@ -169,19 +187,24 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 			CorrelationId: corrId,
 			Body:          body, // Our JSON body as []byte
 			ReplyTo:       replyQueue.Name,
-		})
+		},
+	)
+
+	if err != nil {
+		logrus.Errorf("amqp: publish message failed: %v", err)
+		return nil, err
+	}
 
 	logrus.Debugf("A message was sent to queue %v: %v", queueName, string(body))
 
-	tmr := time.NewTimer(3)
+	tmr := time.NewTimer(3 * time.Second)
 
-	var res []byte
 	for {
 		select {
 		case d := <-msgs:
 			if corrId == d.CorrelationId {
-				res = d.Body
-				return res, err
+				logrus.Debugln(string(d.Body))
+				return d.Body, nil
 			}
 		case <-tmr.C:
 			return nil, TimeEX
@@ -233,7 +256,7 @@ func (m *MessagingClient) Subscribe(exchangeName string, exchangeType string, co
 	msgs, err := ch.Consume(
 		queue.Name,   // queue
 		consumerName, // consumer
-		true,         // auto-ack
+		false,        // auto-ack
 		false,        // exclusive
 		false,        // no-local
 		false,        // no-wait
@@ -263,7 +286,7 @@ func (m *MessagingClient) SubscribeToQueue(queueName string, consumerName string
 	msgs, err := ch.Consume(
 		queue.Name,   // queue
 		consumerName, // consumer
-		true,         // auto-ack
+		false,        // auto-ack
 		false,        // exclusive
 		false,        // no-local
 		false,        // no-wait
@@ -293,7 +316,7 @@ func (m *MessagingClient) SubscribeToQueueAndReply(queueName string, consumerNam
 	msgs, err := ch.Consume(
 		queue.Name,   // queue
 		consumerName, // consumer
-		true,         // auto-ack
+		false,        // auto-ack
 		false,        // exclusive
 		false,        // no-local
 		false,        // no-wait

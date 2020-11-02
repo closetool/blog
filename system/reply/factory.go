@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/sirupsen/logrus"
 )
 
 func CreateWithError() *Reply {
@@ -84,6 +85,7 @@ func CreateJSONsuccess(c *gin.Context) {
 func ErrorBytes(errorCode int) []byte {
 	bytes, err := jsoniter.Marshal(CreateWithErrorX(errorCode))
 	if err != nil {
+		logrus.Errorf("marshal encountered an error: %v", err)
 		return nil
 	}
 	return bytes
@@ -92,6 +94,7 @@ func ErrorBytes(errorCode int) []byte {
 func ModelBytes(model interface{}) []byte {
 	bytes, err := jsoniter.Marshal(CreateWithModel(model))
 	if err != nil {
+		logrus.Errorf("marshal encountered an error: %v", err)
 		return nil
 	}
 	return bytes
@@ -100,6 +103,7 @@ func ModelBytes(model interface{}) []byte {
 func ModelsBytes(models []interface{}) []byte {
 	bytes, err := jsoniter.Marshal(CreateWithModels(models))
 	if err != nil {
+		logrus.Errorf("marshal encountered an error: %v", err)
 		return nil
 	}
 	return bytes

@@ -45,6 +45,7 @@ func main() {
 	amqp.GetCategoryNameById()
 	amqp.GetTagsByName()
 	amqp.GetTagsByIds()
+	amqp.AddTags()
 
 	exit.Listen(func() {})
 

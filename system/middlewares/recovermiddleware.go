@@ -1,8 +1,6 @@
 package middlewares
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/closetool/blog/system/reply"
@@ -17,11 +15,11 @@ func Recover() gin.HandlerFunc {
 				errCode, ok := r.(int)
 				if ok {
 					c.JSON(http.StatusOK, reply.CreateWithErrorX(errCode))
-					c.Abort()
 				} else {
 					logrus.Errorf("Recovered: %v", r)
-					c.AbortWithError(http.StatusInternalServerError, errors.New(fmt.Sprintf("%v", r)))
+					//c.AbortWithError(http.StatusInternalServerError, errors.New(fmt.Sprintf("%v", r)))
 				}
+				c.Abort()
 			}
 		}()
 		c.Next()

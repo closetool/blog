@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/closetool/blog/services/logservice/model/po"
-	"github.com/closetool/blog/services/logservice/model/vo"
+	"github.com/closetool/blog/services/logservice/models/po"
+	"github.com/closetool/blog/services/logservice/models/vo"
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/models"

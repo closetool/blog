@@ -17,15 +17,15 @@ import (
 
 func VerifyToken() {
 	messaging.Client.SubscribeToQueueAndReply("auth.verifyToken", "auth.verifyToken", func(a amqp.Delivery) []byte {
-		amqpUser := vo.AuthUser{}
-		jsoniter.Get(a.Body).ToVal(amqpUser)
-		header := amqpUser.Token
+		header := string(a.Body)
+		logrus.Debugln(header)
 		if header == "" {
 			return reply.ErrorBytes(reply.InvalidToken)
 		}
 
 		token, _, err := new(jwt.Parser).ParseUnverified(header, &vo.AuthUser{})
 		if err != nil {
+			logrus.Debug(err)
 			return reply.ErrorBytes(reply.InvalidToken)
 		}
 
@@ -35,8 +35,10 @@ func VerifyToken() {
 		)
 
 		if claim, ok = token.Claims.(*vo.AuthUser); !ok {
+			logrus.Debug("can not convert interface{} to *vo.AuthUser")
 			return reply.ErrorBytes(reply.InvalidToken)
 		} else if time.Unix(claim.ExpiresAt, 0).Sub(time.Now()).Seconds() <= 0 {
+			logrus.Debug("Time Excced")
 			return reply.ErrorBytes(reply.InvalidToken)
 		}
 

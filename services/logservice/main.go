@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/closetool/blog/services/logservice/model/po"
+	"github.com/closetool/blog/services/logservice/models/po"
+	"github.com/closetool/blog/services/logservice/service"
 	"github.com/closetool/blog/services/logservice/service/amqp"
-	"github.com/closetool/blog/services/userservice/service"
 	"github.com/closetool/blog/system/config"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/exit"
@@ -36,12 +36,13 @@ func main() {
 	db.SyncTables(&po.AuthUserLog{})
 
 	r := initial.InitServer()
-	routeutils.RegisterRoute(service.Routes, r.Group("/logs"))
+	routeutils.RegisterRoute(service.LogRoutes, r.Group("/logs"))
 
 	messaging.Client = new(messaging.MessagingClient)
 	messaging.Client.ConnectToBroker(viper.GetString("amqp_location"))
 	//FIXME
 	amqp.SaveLogs()
+	amqp.GetParamGroupByCode()
 
 	exit.Listen(func() {})
 

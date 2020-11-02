@@ -31,6 +31,8 @@ func GetCategoryNameById() {
 			result[category.Id] = category.Name
 		}
 		logrus.Debugln(result)
-		return reply.ModelBytes(result)
+		t := reply.ModelBytes(result)
+		logrus.Debugln(string(t))
+		return t
 	})
 }

@@ -53,3 +53,39 @@ func GetTagsByIds() {
 		return reply.ModelsBytes(tagsInterface)
 	})
 }
+
+func AddTags() {
+	messaging.Client.SubscribeToQueueAndReply("tags.addTags", "tags.addTags", func(d amqp.Delivery) []byte {
+		TagsList := []*vo.Tags{}
+		logrus.Debugln(string(d.Body))
+		if err := jsoniter.Unmarshal(d.Body, &TagsList); err != nil {
+			logrus.Debugln(err)
+			return reply.ErrorBytes(reply.Error)
+		}
+		for _, tags := range TagsList {
+			logrus.Debugln(tags)
+		}
+		ids := []interface{}{}
+		for _, tagsVO := range TagsList {
+			tagsPO := &po.Tags{Name: tagsVO.Name}
+			var (
+				count int64
+				err   error
+			)
+			if count, err = db.DB.Where("name = ?", tagsPO.Name).Count(tagsPO); err != nil {
+				logrus.Debugln(err)
+				return reply.ErrorBytes(reply.DatabaseSqlParseError)
+			}
+			if count == 0 {
+				if _, err = db.DB.InsertOne(tagsPO); err != nil {
+					logrus.Debugln(err)
+					return reply.ErrorBytes(reply.DatabaseSqlParseError)
+				}
+			} else {
+				db.DB.Where("name=?", tagsPO.Name).Get(tagsPO)
+			}
+			ids = append(ids, tagsPO.Id)
+		}
+		return reply.ModelsBytes(ids)
+	})
+}

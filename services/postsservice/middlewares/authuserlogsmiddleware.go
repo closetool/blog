@@ -3,7 +3,7 @@ package middlewares
 import (
 	"time"
 
-	authuservo "github.com/closetool/blog/services/logservice/model/vo"
+	authuservo "github.com/closetool/blog/services/logservice/models/vo"
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/messaging"
 	"github.com/closetool/blog/utils/httpcontextutils"
@@ -29,7 +29,7 @@ func AuthUserLogMiddleware(code string, module string) func(c *gin.Context) {
 			}
 		} else {
 			for k, v := range c.Request.URL.Query() {
-				if len(v) > 0 {
+				if v != nil && len(v) > 0 {
 					m[k] = v[0]
 				}
 			}

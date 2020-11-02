@@ -1,6 +1,9 @@
 package collectionsutils
 
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+)
 
 func IsSliceEmpty(slice []interface{}) bool {
 	if slice == nil || len(slice) == 0 {
@@ -37,4 +40,16 @@ LOOP:
 		}
 	}
 	return dst
+}
+
+func Abbreviate(text string, length int) string {
+	if length > 0 {
+		if len(text) > length {
+			return fmt.Sprintf("%s...", text[:length])
+		} else {
+			return text
+		}
+	} else {
+		return text
+	}
 }

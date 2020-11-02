@@ -20,18 +20,16 @@ func UserToken(c *gin.Context) {
 		noPrivilege(c)
 		return
 	}
-	obj := vo.AuthUser{Token: header}
-	bt, _ := jsoniter.Marshal(obj)
-	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, "auth.verifyToken")
+	rpl, err := messaging.Client.PublishOnQueueWaitReply([]byte(header), "auth.verifyToken")
 	if err != nil {
 		noPrivilege(c)
 		return
 	}
 	if bytes.Contains(rpl, []byte(reply.HandleErrCode(reply.Success))) {
-		c.Next()
 		user := vo.AuthUser{}
 		jsoniter.Get(rpl, "model").ToVal(&user)
 		c.Set("session", user)
+		c.Next()
 	} else {
 		noPrivilege(c)
 	}
@@ -44,9 +42,7 @@ func AdminToken(c *gin.Context) {
 		noPrivilege(c)
 		return
 	}
-	obj := vo.AuthUser{Token: header}
-	bt, _ := jsoniter.Marshal(obj)
-	rpl, err := messaging.Client.PublishOnQueueWaitReply(bt, "auth.verifyToken")
+	rpl, err := messaging.Client.PublishOnQueueWaitReply([]byte(header), "auth.verifyToken")
 	if err != nil {
 		logrus.Errorf("send message to mq failed: %v", err)
 		noPrivilege(c)
@@ -58,10 +54,10 @@ func AdminToken(c *gin.Context) {
 		noPrivilege(c)
 		return
 	} else {
-		c.Next()
 		user := vo.AuthUser{}
 		jsoniter.Get(rpl, "model").ToVal(&user)
 		c.Set("session", user)
+		c.Next()
 	}
 }
 
