@@ -33,6 +33,6 @@ do
 
 		docker service rm "$servicename" 
 	docker service create --network my_network --replicas 1 --name "$servicename" -p $port:$port "$ALIYUN"closetool/"$servicename"
-	#rm config.yml
+	rm config.yml
 	cd $home
 done

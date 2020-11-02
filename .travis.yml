@@ -19,19 +19,20 @@ dist: xenial
 sudo: required
 
 before_install:
-    - sudo apt-get update
-    - sudo apt-get -y install openjdk-8-jdk
     - docker swarm init
 
 before_script:
     - docker network create -d overlay my_network
     - chmod a+x ./support/config-server/gradlew
-    - chmod a+x ./support.sh ./springcloud.sh
-    - chmod a+x ./mysql.sh
-    - ./mysql.sh
+    - chmod a+x ./*.sh
+    - chmod a+x ./script/mysql.sh
 
 script: 
-    - go test ./...
+    - ./mysql.sh
+    - ./support.sh
+    - ./springcloud.sh
+    - ./nginx.sh
+    - cd scripts && ./universal.sh `cat services.txt`
 
 # after_success: 
 #     - docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver
