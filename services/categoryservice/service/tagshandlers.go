@@ -10,6 +10,7 @@ import (
 	"github.com/closetool/blog/utils/pageutils"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"xorm.io/xorm"
 )
 
 func getTagsList(c *gin.Context) {
@@ -114,7 +115,7 @@ func getTags(c *gin.Context) {
 	reply.CreateJSONModel(c, tagsVO)
 }
 
-func saveTags(c *gin.Context) error {
+func saveTags(c *gin.Context, session *xorm.Session) error {
 	tagsVO := &vo.Tags{}
 	err := c.ShouldBindJSON(tagsVO)
 	if err != nil {
@@ -131,7 +132,7 @@ func saveTags(c *gin.Context) error {
 	//	reply.CreateJSONError(c, reply.AccountNotExist)
 	//}
 
-	db.DB.InsertOne(&po.Tags{
+	session.InsertOne(&po.Tags{
 		Name: tagsVO.Name,
 		//CreateBy: user.Id,
 		//UpdateBy: user.Id,
@@ -140,7 +141,7 @@ func saveTags(c *gin.Context) error {
 	return nil
 }
 
-func updateTags(c *gin.Context) error {
+func updateTags(c *gin.Context, session *xorm.Session) error {
 	tagsVO := &vo.Tags{}
 	err := c.ShouldBindJSON(tagsVO)
 	if err != nil || tagsVO.Id == 0 {
@@ -148,7 +149,7 @@ func updateTags(c *gin.Context) error {
 		return err
 	}
 
-	if count, err := db.DB.ID(tagsVO.Id).Cols("name").Update(&po.Tags{Name: tagsVO.Name}); err != nil {
+	if count, err := session.ID(tagsVO.Id).Cols("name").Update(&po.Tags{Name: tagsVO.Name}); err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return err
 	} else if count == 0 {
@@ -159,7 +160,7 @@ func updateTags(c *gin.Context) error {
 	return nil
 }
 
-func deleteTags(c *gin.Context) error {
+func deleteTags(c *gin.Context, session *xorm.Session) error {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -168,10 +169,10 @@ func deleteTags(c *gin.Context) error {
 	}
 	logrus.Debugf("id = %v", id)
 
-	db.DB.ID(id).Delete(&po.Tags{})
-	db.DB.Where("tags_id = ?", id).Delete(&po.CategoryTags{})
+	session.ID(id).Delete(&po.Tags{})
+	session.Where("tags_id = ?", id).Delete(&po.CategoryTags{})
 	//TODO:向消息总线发送任务，请求postsservice删除相关poststags
-	//db.DB.Where("tags_id = ?", id).Delete()
+	//session.Where("tags_id = ?", id).Delete()
 	reply.CreateJSONsuccess(c)
 	return nil
 }

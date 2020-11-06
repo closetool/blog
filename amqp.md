@@ -10,6 +10,16 @@
 > request: [id1,id2...]
 > response: {"model":{"id1":"username1","id2":"username2"}}
 
+* SelectAdmin
+> queue name: auth.selectAdmin
+> request: 无参数
+> response: {"model":{"id":id,"username":"xxx"...}}
+
+* GetUserById
+> queue name: auth.getUserById
+> request: [id1,id2...]
+> response: {"model":{"id1":{"name":"username1"},"id2":{"name":"username2"}}}
+
 ## CATEGORY
 
 * GetCategoryNameById

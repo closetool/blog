@@ -25,7 +25,7 @@ before_script:
     - docker network create -d overlay my_network
     - chmod a+x ./support/config-server/gradlew
     - chmod a+x ./*.sh
-    - chmod a+x ./scripts/mysql.sh
+    - chmod a+x ./scripts/*.sh
 
 script: 
     - ./mysql.sh

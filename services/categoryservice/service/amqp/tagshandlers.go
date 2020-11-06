@@ -62,9 +62,6 @@ func AddTags() {
 			logrus.Debugln(err)
 			return reply.ErrorBytes(reply.Error)
 		}
-		for _, tags := range TagsList {
-			logrus.Debugln(tags)
-		}
 		ids := []interface{}{}
 		for _, tagsVO := range TagsList {
 			tagsPO := &po.Tags{Name: tagsVO.Name}

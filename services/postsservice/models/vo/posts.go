@@ -17,7 +17,7 @@ type Posts struct {
 	IsComment         int              `json:"isComment,omitempty" form:"isComment"`
 	CategoryId        int64            `json:"categoryId,omitempty" form:"categoryId"`
 	SyncStatus        int              `json:"syncStatus,omitempty" form:"syncStatus"`
-	Status            int              `json:"status,omitempty" form:"status"`
+	Status            int              `json:"status,omitempty" form:"status" binding:"required"`
 	Summary           string           `json:"summary,omitempty" form:"summary"`
 	Views             int              `json:"views,omitempty" form:"views"`
 	ViewsTotal        int64            `json:"viewsTotal,omitempty" form:"viewsTotal"`

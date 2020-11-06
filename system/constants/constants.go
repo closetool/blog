@@ -14,6 +14,8 @@ const (
 
 	SocialIsHome  = 1
 	SocialEnabled = 1
+
+	TreePath = "."
 )
 
 var (

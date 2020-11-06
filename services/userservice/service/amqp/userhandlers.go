@@ -6,6 +6,7 @@ import (
 	"github.com/closetool/blog/services/userservice/models/po"
 	"github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/services/userservice/utils"
+	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/messaging"
 	"github.com/closetool/blog/system/reply"
@@ -98,6 +99,48 @@ func GetUserNameById() {
 		result := make(map[int64]string)
 		for _, user := range users {
 			result[user.Id] = user.Name
+		}
+		return reply.ModelBytes(result)
+	})
+}
+
+func SelectAdmin() {
+	messaging.Client.SubscribeToQueueAndReply("auth.selectAdmin", "auth.selectAdmin", func(d amqp.Delivery) []byte {
+		admin := po.AuthUser{}
+		if _, err := db.DB.Where("role_id = ?", constants.RoleAdmin).Get(&admin); err != nil {
+			logrus.Debugln(err)
+			return reply.ErrorBytes(reply.DatabaseSqlParseError)
+		}
+		admin.Password = ""
+		return reply.ModelBytes(admin)
+	})
+}
+
+func GetUserById() {
+	messaging.Client.SubscribeToQueueAndReply("auth.getUserById", "auth.getUserById", func(d amqp.Delivery) []byte {
+		ids := make([]int64, 0)
+		jsoniter.Get(d.Body).ToVal(&ids)
+
+		idsInterface := make([]interface{}, 0)
+		for _, id := range ids {
+			idsInterface = append(idsInterface, id)
+		}
+
+		users := make([]*po.AuthUser, 0)
+		if err := db.DB.In("id", idsInterface...).Find(&users); err != nil {
+			return reply.ErrorBytes(reply.DatabaseSqlParseError)
+		}
+
+		result := make(map[int64]vo.AuthUser)
+		for _, user := range users {
+			result[user.Id] = vo.AuthUser{
+				Id:       user.Id,
+				SocialId: user.SocialId,
+				Avatar:   user.Avatar,
+				Name:     user.Name,
+				RoleId:   user.RoleId,
+				Email:    user.Email,
+			}
 		}
 		return reply.ModelBytes(result)
 	})

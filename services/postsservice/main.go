@@ -38,6 +38,8 @@ func main() {
 	r := initial.InitServer()
 	//TODO
 	routeutils.RegisterRoute(service.PostsRoutes, r.Group("posts"))
+	routeutils.RegisterRoute(service.ArchiveRoutes, r.Group("archive"))
+	routeutils.RegisterRoute(service.CommentsRoutes, r.Group("comments"))
 
 	messaging.Client = new(messaging.MessagingClient)
 	messaging.Client.ConnectToBroker(viper.GetString("amqp_location"))

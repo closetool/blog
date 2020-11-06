@@ -5,9 +5,10 @@ import (
 	"github.com/closetool/blog/system/reply"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"xorm.io/xorm"
 )
 
-func Wrapper(fn func(*gin.Context) error) func(*gin.Context) {
+func Wrapper(fn func(*gin.Context, *xorm.Session) error) func(*gin.Context) {
 	return func(g *gin.Context) {
 		session := db.DB.NewSession()
 		defer session.Close()
@@ -18,7 +19,7 @@ func Wrapper(fn func(*gin.Context) error) func(*gin.Context) {
 			reply.CreateJSONError(g, reply.Error)
 			return
 		}
-		err = fn(g)
+		err = fn(g, session)
 		if err != nil {
 			session.Rollback()
 			logrus.Errorf("transaction rollbacked: %v\n", err)

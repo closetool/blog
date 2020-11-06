@@ -12,6 +12,7 @@ import (
 	"github.com/closetool/blog/system/reply"
 	"github.com/closetool/blog/utils/pageutils"
 	"github.com/gin-gonic/gin"
+	"xorm.io/xorm"
 )
 
 func Health(c *gin.Context) {
@@ -51,15 +52,15 @@ func getLogs(c *gin.Context) {
 	reply.CreateJSONModel(c, logVO)
 }
 
-func deleteLogs(c *gin.Context) {
+func deleteLogs(c *gin.Context, session *xorm.Session) error {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		reply.CreateJSONError(c, reply.Error)
-		return
+		return err
 	}
-	db.DB.ID(id).Delete(&po.AuthUserLog{})
-	return
+	session.ID(id).Delete(&po.AuthUserLog{})
+	return nil
 }
 
 func getLogsList(c *gin.Context) {

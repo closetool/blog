@@ -43,6 +43,8 @@ func main() {
 	//FIXME
 	amqp.VerifyToken()
 	amqp.GetUserNameById()
+	amqp.SelectAdmin()
+	amqp.GetUserById()
 
 	exit.Listen(func() {})
 

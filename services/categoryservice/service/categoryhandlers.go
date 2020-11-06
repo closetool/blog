@@ -14,13 +14,14 @@ import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
+	"xorm.io/xorm"
 )
 
 func health(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]bool{"health": true})
 }
 
-func saveCategory(c *gin.Context) error {
+func saveCategory(c *gin.Context, session *xorm.Session) error {
 	categoryVO := &vo.Category{}
 	err := c.ShouldBindJSON(categoryVO)
 	if err != nil {
@@ -31,11 +32,11 @@ func saveCategory(c *gin.Context) error {
 		Name: categoryVO.Name,
 	}
 
-	if ok, err := db.DB.Where("name = ?", categoryPO.Name).Get(categoryPO); err != nil {
+	if ok, err := session.Where("name = ?", categoryPO.Name).Get(categoryPO); err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return err
 	} else if !ok {
-		if _, err := db.DB.InsertOne(categoryPO); err != nil {
+		if _, err := session.InsertOne(categoryPO); err != nil {
 			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 			return err
 		}
@@ -45,11 +46,11 @@ func saveCategory(c *gin.Context) error {
 		tagPO := &po.Tags{
 			Name: tag.Name,
 		}
-		if ok, err := db.DB.Where("name = ?", tagPO.Name).Get(tagPO); err != nil {
+		if ok, err := session.Where("name = ?", tagPO.Name).Get(tagPO); err != nil {
 			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 			return err
 		} else if !ok {
-			if _, err := db.DB.InsertOne(tagPO); err != nil {
+			if _, err := session.InsertOne(tagPO); err != nil {
 				reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 				return err
 			}
@@ -60,11 +61,11 @@ func saveCategory(c *gin.Context) error {
 			CategoryId: categoryPO.Id,
 		}
 
-		if ok, err := db.DB.Where("tags_id = ? and category_id = ?", categoryTagsPO.TagsId, categoryTagsPO.CategoryId).Get(categoryTagsPO); err != nil {
+		if ok, err := session.Where("tags_id = ? and category_id = ?", categoryTagsPO.TagsId, categoryTagsPO.CategoryId).Get(categoryTagsPO); err != nil {
 			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 			return err
 		} else if !ok {
-			if _, err := db.DB.InsertOne(categoryTagsPO); err != nil {
+			if _, err := session.InsertOne(categoryTagsPO); err != nil {
 				reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 				return err
 			}
@@ -137,7 +138,7 @@ func statisticsList(c *gin.Context) {
 //	reply.CreateJSONModels(c, categoryVOList)
 //}
 
-func updateCategory(c *gin.Context) error {
+func updateCategory(c *gin.Context, session *xorm.Session) error {
 	categoryVO := &vo.Category{}
 	err := c.ShouldBindJSON(categoryVO)
 	if err != nil {
@@ -150,7 +151,7 @@ func updateCategory(c *gin.Context) error {
 		return nil
 	}
 
-	if count, err := db.DB.ID(categoryVO.Id).Count(&po.Category{}); err != nil {
+	if count, err := session.ID(categoryVO.Id).Count(&po.Category{}); err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return err
 	} else if count == 0 {
@@ -162,12 +163,12 @@ func updateCategory(c *gin.Context) error {
 		Name: categoryVO.Name,
 		Id:   categoryVO.Id,
 	}
-	if _, err := db.DB.ID(categoryPO.Id).Cols("name").Update(categoryPO); err != nil {
+	if _, err := session.ID(categoryPO.Id).Cols("name").Update(categoryPO); err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return err
 	}
 
-	if _, err := db.DB.Where("category_id = ?", categoryVO.Id).Delete(&po.CategoryTags{}); err != nil {
+	if _, err := session.Where("category_id = ?", categoryVO.Id).Delete(&po.CategoryTags{}); err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return err
 	}
@@ -176,11 +177,11 @@ func updateCategory(c *gin.Context) error {
 		tagPO := &po.Tags{
 			Name: tag.Name,
 		}
-		if ok, err := db.DB.Where("name = ?", tagPO.Name).Get(tagPO); err != nil {
+		if ok, err := session.Where("name = ?", tagPO.Name).Get(tagPO); err != nil {
 			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 			return err
 		} else if !ok {
-			if _, err := db.DB.InsertOne(tagPO); err != nil {
+			if _, err := session.InsertOne(tagPO); err != nil {
 				reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 				return err
 			}
@@ -191,11 +192,11 @@ func updateCategory(c *gin.Context) error {
 			CategoryId: categoryPO.Id,
 		}
 
-		if ok, err := db.DB.Where("tags_id = ? and category_id = ?", categoryTagsPO.TagsId, categoryTagsPO.CategoryId).Get(categoryTagsPO); err != nil {
+		if ok, err := session.Where("tags_id = ? and category_id = ?", categoryTagsPO.TagsId, categoryTagsPO.CategoryId).Get(categoryTagsPO); err != nil {
 			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 			return err
 		} else if !ok {
-			if _, err := db.DB.InsertOne(categoryTagsPO); err != nil {
+			if _, err := session.InsertOne(categoryTagsPO); err != nil {
 				reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 				return err
 			}
@@ -431,7 +432,7 @@ func getCategoryList(c *gin.Context) {
 //	reply.CreateJSONModels(c, categoryVOList)
 //}
 
-func deleteCategory(c *gin.Context) error {
+func deleteCategory(c *gin.Context, session *xorm.Session) error {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -439,12 +440,12 @@ func deleteCategory(c *gin.Context) error {
 		return err
 	}
 
-	_, err = db.DB.ID(id).Delete(&po.Category{})
+	_, err = session.ID(id).Delete(&po.Category{})
 	if err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return err
 	}
-	_, err = db.DB.Where("category_id = ?", id).Delete(&po.CategoryTags{})
+	_, err = session.Where("category_id = ?", id).Delete(&po.CategoryTags{})
 	if err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return err

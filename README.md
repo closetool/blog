@@ -50,7 +50,16 @@
 ### tags
 > * /tags/v1/list \> /list/v1/tags
 
+## Posts Service
+
+### posts
+> * /posts/v1/list \> /list/v1/posts
+> * /comments/v1/get \> /get/v1/comments
+
 ## FIXME
 * docker swarm中不同node之间的同一overlay网络中的容器无法互相访问，nginx代理只能使用公网
 * gin框架中不支持注册spring中的requestmapping，只能为路由多次注册不同方法
 * gin框架中/info和/:id路由冲突
+
+## TODO
+* 使用gorm替换xorm

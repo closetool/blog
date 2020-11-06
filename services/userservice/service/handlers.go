@@ -23,6 +23,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"xorm.io/xorm"
 )
 
 func Health(c *gin.Context) {
@@ -47,7 +48,7 @@ func getUserInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, reply.CreateWithModel(userVO))
 }
 
-func deleteUser(c *gin.Context) error {
+func deleteUser(c *gin.Context, session *xorm.Session) error {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -55,14 +56,14 @@ func deleteUser(c *gin.Context) error {
 		return err
 	}
 	user := &po.AuthUser{Id: id}
-	ok, err := db.DB.Get(user)
+	ok, err := session.Get(user)
 	if !ok || err != nil {
 		reply.CreateJSONError(c, reply.AccountNotExist)
 		return err
 	}
 
 	if user.RoleId != constants.RoleAdmin {
-		_, err := db.DB.Delete(user)
+		_, err := session.Delete(user)
 		c.JSON(http.StatusOK, reply.CreateWithSuccess())
 		return err
 	}
@@ -70,7 +71,7 @@ func deleteUser(c *gin.Context) error {
 	return err
 }
 
-func saveAuthUserStatus(c *gin.Context) error {
+func saveAuthUserStatus(c *gin.Context, session *xorm.Session) error {
 	userVO := vo.CreateDefaultAuthUser()
 	err := c.ShouldBindJSON(userVO)
 	if err != nil {
@@ -83,7 +84,7 @@ func saveAuthUserStatus(c *gin.Context) error {
 	//将AuthUser中的数字属性默认值设置为-1
 	//避免默认值和真实值相冲突
 	if userVO.Id != -1 && userVO.Status != -1 {
-		count, err := db.DB.Table(new(po.AuthUser)).ID(userVO.Id).
+		count, err := session.Table(new(po.AuthUser)).ID(userVO.Id).
 			Where("role_id = ?", constants.RoleUser).
 			Update(map[string]interface{}{"status": userVO.Status})
 		logrus.Debugf("count = %v", count)
@@ -169,7 +170,7 @@ func oathLoginByGithub(c *gin.Context) {
 	c.PureJSON(http.StatusOK, reply.CreateWithModel(map[string]string{"authorizeUrl": url}))
 }
 
-func saveUserByGithub(c *gin.Context) error {
+func saveUserByGithub(c *gin.Context, session *xorm.Session) error {
 	userVO := &vo.AuthUser{}
 	err := c.ShouldBindJSON(&userVO)
 	if err != nil {
@@ -179,7 +180,7 @@ func saveUserByGithub(c *gin.Context) error {
 	}
 
 	user := new(po.AuthUser)
-	ok, err := db.DB.Where("social_id = ?", userVO.SocialId).Get(user)
+	ok, err := session.Where("social_id = ?", userVO.SocialId).Get(user)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
 		logrus.Errorf("get user by social_id failed: %v", err)
@@ -194,7 +195,7 @@ func saveUserByGithub(c *gin.Context) error {
 			RoleId:   constants.RoleUser,
 			Password: hex.EncodeToString(hs.Sum([]byte(userVO.SocialId))),
 		}
-		_, err := db.DB.InsertOne(&userPO)
+		_, err := session.InsertOne(&userPO)
 		if err != nil {
 			reply.CreateJSONError(c, reply.Error)
 			logrus.Errorf("insert into %s failed: %v", userPO.TableName(), err)
@@ -228,7 +229,7 @@ func saveUserByGithub(c *gin.Context) error {
 		Token:      token,
 		ExpireTime: time.Unix(expire, 0),
 	}
-	_, err = db.DB.InsertOne(userToken)
+	_, err = session.InsertOne(userToken)
 	if err != nil {
 		reply.CreateJSONError(c, reply.Error)
 		logrus.Errorf("Insert token failed: %v", err)
@@ -238,7 +239,7 @@ func saveUserByGithub(c *gin.Context) error {
 	return nil
 }
 
-func registerAdminByGithub(c *gin.Context) error {
+func registerAdminByGithub(c *gin.Context, session *xorm.Session) error {
 	logrus.Debugln("/auth/admin/v1/register was called")
 	userVO := vo.CreateDefaultAuthUser()
 	err := c.ShouldBindJSON(userVO)
@@ -249,7 +250,7 @@ func registerAdminByGithub(c *gin.Context) error {
 	}
 
 	admin := &po.AuthUser{}
-	ok, err := db.DB.Where("role_id = ?", constants.RoleAdmin).Get(admin)
+	ok, err := session.Where("role_id = ?", constants.RoleAdmin).Get(admin)
 	if err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		logrus.Errorf("select admin from db failed: %v", err)
@@ -263,7 +264,7 @@ func registerAdminByGithub(c *gin.Context) error {
 			RoleId:   constants.RoleAdmin,
 			Password: fmt.Sprintf("%x", md5.Sum([]byte(userVO.Password))),
 		}
-		_, err := db.DB.InsertOne(userPO)
+		_, err := session.InsertOne(userPO)
 		if err != nil {
 			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 			logrus.Errorf("insert admin from db failed: %v", err)
@@ -334,7 +335,7 @@ func login(c *gin.Context) {
 
 }
 
-func updatePassword(c *gin.Context) error {
+func updatePassword(c *gin.Context, session *xorm.Session) error {
 	userVO := &vo.AuthUser{}
 	err := c.BindJSON(userVO)
 	if err != nil {
@@ -343,8 +344,8 @@ func updatePassword(c *gin.Context) error {
 		return err
 	}
 
-	session, _ := c.Get("session")
-	admin, ok := session.(*po.AuthUser)
+	s, _ := c.Get("session")
+	admin, ok := s.(*po.AuthUser)
 	if !ok {
 		reply.CreateJSONError(c, reply.Error)
 	}
@@ -356,7 +357,7 @@ func updatePassword(c *gin.Context) error {
 		return nil
 	}
 
-	_, err = db.DB.Table(&po.AuthUser{}).ID(admin.Id).
+	_, err = session.Table(&po.AuthUser{}).ID(admin.Id).
 		Update(map[string]string{
 			"password": fmt.Sprintf("%x", md5.Sum([]byte(userVO.Password))),
 		})
@@ -369,7 +370,7 @@ func updatePassword(c *gin.Context) error {
 	return err
 }
 
-func updateAdmin(c *gin.Context) error {
+func updateAdmin(c *gin.Context, session *xorm.Session) error {
 	userVO := &vo.AuthUser{}
 	err := c.BindJSON(userVO)
 	if err != nil {
@@ -378,8 +379,8 @@ func updateAdmin(c *gin.Context) error {
 		return err
 	}
 
-	sessionInter, exist := c.Get("session")
-	admin, ok := sessionInter.(*po.AuthUser)
+	s, exist := c.Get("session")
+	admin, ok := s.(*po.AuthUser)
 	if !exist || !ok {
 		reply.CreateJSONError(c, reply.AccountNotExist)
 		return nil
@@ -392,7 +393,7 @@ func updateAdmin(c *gin.Context) error {
 		Introduction: userVO.Introduction,
 	}
 
-	if count, err := db.DB.ID(admin.Id).
+	if count, err := session.ID(admin.Id).
 		Cols("email", "avatar", "name", "introduction").
 		Update(userPO); err != nil || count == 0 {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
@@ -402,7 +403,7 @@ func updateAdmin(c *gin.Context) error {
 	return nil
 }
 
-func updateUser(c *gin.Context) error {
+func updateUser(c *gin.Context, session *xorm.Session) error {
 	userVO := &vo.AuthUser{}
 	if err := contextBindAuthUser(c, userVO); err != nil {
 		return err
@@ -420,7 +421,7 @@ func updateUser(c *gin.Context) error {
 		Introduction: userVO.Introduction,
 		Status:       userVO.Status,
 	}
-	if count, err := db.DB.ID(userVO.Id).
+	if count, err := session.ID(userVO.Id).
 		Cols("email", "avatar", "name", "introduction", "status").
 		Update(userPO); count == 0 || err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
@@ -441,7 +442,7 @@ func contextBindAuthUser(c *gin.Context, userVO *vo.AuthUser) error {
 	return nil
 }
 
-func logout(c *gin.Context) error {
+func logout(c *gin.Context, session *xorm.Session) error {
 	//TODO:修改为删除redis缓存
 	return nil
 }
@@ -471,7 +472,7 @@ func getAvatar(c *gin.Context) {
 	c.Data(http.StatusOK, resp.Header.Get("Content-Type"), bytes)
 }
 
-func saveSocial(c *gin.Context) error {
+func saveSocial(c *gin.Context, session *xorm.Session) error {
 	socialVO := &vo.AuthUserSocial{}
 	err := c.BindJSON(socialVO)
 	if err != nil {
@@ -496,7 +497,7 @@ func saveSocial(c *gin.Context) error {
 		IsHome:    socialVO.IsHome,
 	}
 
-	if count, err := db.DB.InsertOne(socialPO); count == 0 || err != nil {
+	if count, err := session.InsertOne(socialPO); count == 0 || err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		if err != nil {
 			return err
@@ -508,7 +509,7 @@ func saveSocial(c *gin.Context) error {
 	return nil
 }
 
-func editSocial(c *gin.Context) error {
+func editSocial(c *gin.Context, session *xorm.Session) error {
 	socialVO := &vo.AuthUserSocial{}
 	err := c.BindJSON(socialVO)
 	if err != nil {
@@ -530,7 +531,7 @@ func editSocial(c *gin.Context) error {
 		IsEnabled: socialVO.IsEnabled,
 		IsHome:    socialVO.IsHome,
 	}
-	if count, err := db.DB.ID(socialVO.Id).AllCols().
+	if count, err := session.ID(socialVO.Id).AllCols().
 		Update(socialPO); count == 0 || err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		if err != nil {
@@ -576,7 +577,7 @@ func getSocial(c *gin.Context) {
 	return
 }
 
-func delSocial(c *gin.Context) error {
+func delSocial(c *gin.Context, session *xorm.Session) error {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -584,7 +585,7 @@ func delSocial(c *gin.Context) error {
 		return err
 	}
 
-	if count, err := db.DB.ID(id).Delete(&po.AuthUserSocial{}); count == 0 || err != nil {
+	if count, err := session.ID(id).Delete(&po.AuthUserSocial{}); count == 0 || err != nil {
 		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 		return err
 	}

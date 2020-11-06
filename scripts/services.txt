@@ -1,1 +1,1 @@
-musicservice:2599 userservice:2600 categoryservice:2601 logservice:2602 postsservice:2603
+musicservice:2599 userservice:2600 categoryservice:2601 logservice:2603 postsservice:2602
