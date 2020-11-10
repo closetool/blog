@@ -16,7 +16,7 @@ func main() {
 	flag.Parse()
 	bts := []byte(*data)
 	messaging.Client = &messaging.MessagingClient{}
-	messaging.Client.ConnectToBroker("amqp://guest:guest@closetool.site:5672/")
+	messaging.Client.ConnectToBroker("amqp://guest:guest@closetool.top:5672/")
 	go func() {
 		timer := time.NewTimer(3 * time.Second)
 		select {

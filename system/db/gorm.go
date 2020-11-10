@@ -12,10 +12,18 @@ import (
 var Gorm *gorm.DB
 
 func GormInit() {
-	dsn := fmt.Sprintf(viper.GetString("gorm_locaion"), viper.GetString("db_password"))
+	dsn := fmt.Sprintf(viper.GetString("gorm_location"), viper.GetString("db_password"))
 	var err error
 	Gorm, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
+		logrus.Debugln(err)
 		logrus.Panicf("can not connect to database")
+	}
+}
+
+func Migrate(beans ...interface{}) {
+	if err := Gorm.AutoMigrate(beans...); err != nil {
+		logrus.Debugln(err)
+		logrus.Panicf("can not migrate tables")
 	}
 }

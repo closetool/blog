@@ -9,7 +9,7 @@ type Reply struct {
 	Model     interface{}   `json:"model"`
 	Models    []interface{} `json:"models"`
 	Pageinfo  PageInfo      `json:"pageInfo,omitempty"`
-	Extra     []interface{} `json:"extra,omitempty"`
+	Extra     interface{}   `json:"extra,omitempty"`
 }
 
 type PageInfo struct {

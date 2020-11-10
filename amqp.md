@@ -64,3 +64,16 @@
 > queue name: logs.getParamGroupByCode
 > request: "Code"
 > response: {"models":[]vo.AuthUserLog{Paramter:"...",Code:"..."}}
+
+## CONFIG
+
+* GetConfig
+> queue name: config.getConfigs
+> request: ["configKey1","configKey2"]
+> request: {"model":{"configKey1":"configValue1","configKey2":"configValue2"}}
+
+## FILE
+
+* SetUploadDst
+> queue name: file.setUploadDst
+> request: "dst"

@@ -4,7 +4,8 @@ home=`pwd`
 
 for i in $@
 do
-	servicename=$i
+	servicename=${i%:*}
+	port=${i#*:}
 
 	if [ -z $servicename ] 
 	then 
@@ -24,5 +25,7 @@ do
 	echo "built $servicename-linux-amd64 in `pwd`"
 
 	docker build -t closetool/"$servicename" ./
-    cd $home
+
+	rm config.yml
+	cd $home
 done

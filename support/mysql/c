@@ -1,0 +1,359 @@
+-- MySQL dump 10.13  Distrib 8.0.16, for Win64 (x86_64)
+--
+-- Host: localhost    Database: test
+-- ------------------------------------------------------
+-- Server version	8.0.16
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+ SET NAMES utf8 ;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+CREATE DATABASE test default CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE test;
+--
+-- Table structure for table `auth_token`
+--
+
+DROP TABLE IF EXISTS `auth_token`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `auth_token` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `token` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'token',
+  `expire_time` datetime NOT NULL COMMENT '过期时间',
+  `user_id` bigint(20) NOT NULL COMMENT '创建人',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT COMMENT='标签表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+DROP TABLE IF EXISTS `auth_user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `auth_user` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `social_id` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '社交账户ID',
+  `password` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '密码',
+  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '别名',
+  `role_id` bigint(20) NOT NULL COMMENT '角色主键 1 普通用户 2 admin',
+  `email` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '邮箱',
+  `introduction` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '个人简介',
+  `avatar` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '头像',
+  `create_time` datetime NOT NULL COMMENT '注册时间',
+  `access_key` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT 'ak',
+  `secret_key` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT 'sk',
+  `status` int(1) DEFAULT '0' COMMENT '0 正常 1 锁定 ',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `idx_email` (`email`) COMMENT '邮箱唯一'
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+DROP TABLE IF EXISTS `auth_user_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `auth_user_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` varchar(20) NOT NULL COMMENT '记录用户id(游客取系统id：-1)',
+  `ip` varchar(32) NOT NULL COMMENT 'ip地址',
+  `url` varchar(255) NOT NULL COMMENT '请求的url',
+  `parameter` varchar(5000) DEFAULT NULL COMMENT '需要记录的参数',
+  `device` varchar(255) DEFAULT NULL COMMENT '来自于哪个设备 eg 手机 型号 电脑浏览器',
+  `description` varchar(255) DEFAULT NULL COMMENT '描述',
+  `code` varchar(10) DEFAULT NULL COMMENT '日志类型',
+  `run_time` bigint(20) NOT NULL COMMENT '执行时间',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `browser_name` varchar(100) DEFAULT NULL COMMENT '浏览器名称',
+  `browser_version` varchar(100) DEFAULT NULL COMMENT '浏览器版本号',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT COMMENT='用户行为日志记录表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+DROP TABLE IF EXISTS `auth_user_social`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `auth_user_social` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `code` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'qq、csdn、wechat、weibo、email等',
+  `content` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '社交内容',
+  `show_type` smallint(6) NOT NULL COMMENT '展示类型( 1、显示图片，2、显示账号，3、跳转链接)',
+  `remark` varchar(150) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '备注',
+  `icon` varchar(100) DEFAULT NULL COMMENT '图标',
+  `is_enabled` smallint(6) NOT NULL DEFAULT '0' COMMENT '是否启用',
+  `is_home` smallint(6) DEFAULT '0' COMMENT '是否主页社交信息',
+  `create_time` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='用户表社交信息表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `auth_user_social`
+--
+
+LOCK TABLES `auth_user_social` WRITE;
+/*!40000 ALTER TABLE `auth_user_social` DISABLE KEYS */;
+/*!40000 ALTER TABLE `auth_user_social` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `black_list`
+--
+
+DROP TABLE IF EXISTS `black_list`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `black_list` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `ip_range` varchar(150) DEFAULT NULL COMMENT 'ip范围',
+  `is_enable` int(1) DEFAULT '0' COMMENT '是否启用 0 启用，1不启用',
+  `create_user` varchar(255) DEFAULT NULL COMMENT '创建者',
+  `create_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_user` datetime DEFAULT NULL COMMENT '更新者',
+  `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='黑名单拦截表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `black_list`
+--
+
+LOCK TABLES `black_list` WRITE;
+/*!40000 ALTER TABLE `black_list` DISABLE KEYS */;
+/*!40000 ALTER TABLE `black_list` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `category`
+--
+
+DROP TABLE IF EXISTS `category`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `category` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '名称',
+  `sort` smallint(6) NOT NULL DEFAULT '0' COMMENT '排序',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `create_by` bigint(20) DEFAULT NULL COMMENT '创建人',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  `update_by` bigint(20) DEFAULT NULL COMMENT '更新人',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY(`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+DROP TABLE IF EXISTS `category_tags`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `category_tags` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `tags_id` bigint(32) NOT NULL COMMENT '名称',
+  `category_id` bigint(20) NOT NULL COMMENT '分类的主键',
+  `sort` smallint(6) NOT NULL DEFAULT '0' COMMENT '排序',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+DROP TABLE IF EXISTS `config`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `config` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `config_key` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置key',
+  `config_value` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置值',
+  `type` smallint(6) NOT NULL DEFAULT '0' COMMENT '配置类型',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `UK_99vo6d7ci4wlxruo3gd0q2jq8` (`config_key`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `config`
+--
+
+LOCK TABLES `config` WRITE;
+/*!40000 ALTER TABLE `config` DISABLE KEYS */;
+INSERT INTO `config` VALUES (1,'name','closestool',0),(2,'domain','http://closetool.site',0),(3,'keywords','golang,java,backend',0),(4,'description','随着岁月 无尽爱念 藏在于心里',0),(5,'metas','1.1.1',0),(6,'copyright','Copyright @ closetool',0),(7,'icp','xxxx',0),(8,'qiniu_access_key','',1),(9,'qiniu_secret_key','',1),(10,'qiniu_bucket','',1),(11,'qiniu_image_domain','',1),(12,'cloud_music_id','165447515',2),(14,'store_type','default',3),(15,'aliyun_oss_access_key','',4),(16,'aliyun_oss_secret_key','',4),(17,'aliyun_oss_bucket','',4),(18,'aliyun_oss_endpoint','',4),(19,'aliyun_oss_path','',4),(20,'aliyun_oss_image_domain','',4),(21,'cos_access_key','',5),(22,'cos_secret_key','',5),(23,'cos_bucket','',5),(24,'cos_region','',5),(25,'cos_image_domain','',5),(26,'cos_path','',5),(27,'default_path','',6),(28,'default_image_domain','http://closetool.site:9000/api/blog/files',6);
+/*!40000 ALTER TABLE `config` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `friendship_link`
+--
+
+DROP TABLE IF EXISTS `friendship_link`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `friendship_link` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `title` varchar(30) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '标题',
+  `name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '名称',
+  `logo` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '文件',
+  `href` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '跳转的路径',
+  `sort` smallint(6) NOT NULL DEFAULT '0' COMMENT '排序',
+  `description` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '描述',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='友情链接表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `friendship_link`
+--
+
+LOCK TABLES `friendship_link` WRITE;
+/*!40000 ALTER TABLE `friendship_link` DISABLE KEYS */;
+/*!40000 ALTER TABLE `friendship_link` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `menu`
+--
+
+DROP TABLE IF EXISTS `menu`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `menu` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `parent_id` bigint(20) DEFAULT '0' COMMENT '父菜单Id',
+  `title` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '名称',
+  `icon` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'icon图标',
+  `url` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '跳转路径',
+  `sort` smallint(6) NOT NULL DEFAULT '0' COMMENT '排序',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='菜单表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `menu`
+--
+
+LOCK TABLES `menu` WRITE;
+/*!40000 ALTER TABLE `menu` DISABLE KEYS */;
+/*!40000 ALTER TABLE `menu` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `posts`
+--
+
+DROP TABLE IF EXISTS `posts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `posts` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `author_id` bigint(255) DEFAULT NULL COMMENT '文章创建人',
+  `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '文章标题',
+  `thumbnail` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '封面图',
+  `comments` int(11) NOT NULL DEFAULT '0' COMMENT '评论数',
+  `is_comment` smallint(6) DEFAULT '1' COMMENT '是否打开评论 (0 不打开 1 打开 )',
+  `category_id` bigint(20) DEFAULT NULL COMMENT '分类主键',
+  `sync_status` smallint(6) NOT NULL DEFAULT '0' COMMENT '同步到byteblogs状态',
+  `status` int(11) NOT NULL DEFAULT '1' COMMENT '状态 1 草稿 2 发布',
+  `summary` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '摘要',
+  `views` int(11) NOT NULL DEFAULT '0' COMMENT '浏览次数',
+  `weight` int(11) NOT NULL DEFAULT '0' COMMENT '文章权重',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+DROP TABLE IF EXISTS `posts_attribute`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `posts_attribute` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `content` longtext CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '内容',
+  `posts_id` bigint(20) NOT NULL COMMENT '文章表主键' references `posts`(`id`) on delete cascade,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+DROP TABLE IF EXISTS `posts_comments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `posts_comments` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `author_id` bigint(20) NOT NULL,
+  `content` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `parent_id` bigint(20) NOT NULL DEFAULT '0',
+  `status` int(11) NOT NULL DEFAULT '0',
+  `posts_id` bigint(20) NOT NULL,
+  `tree_path` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '层级结构',
+  `create_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT COMMENT='评论表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `posts_comments`
+--
+
+LOCK TABLES `posts_comments` WRITE;
+/*!40000 ALTER TABLE `posts_comments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `posts_comments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `posts_tags`
+--
+
+DROP TABLE IF EXISTS `posts_tags`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `posts_tags` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `tags_id` bigint(32) NOT NULL COMMENT '名称',
+  `posts_id` bigint(20) NOT NULL COMMENT '文章主键',
+  `sort` smallint(6) NOT NULL DEFAULT '0' COMMENT '排序',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+DROP TABLE IF EXISTS `tags`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8 ;
+CREATE TABLE `tags` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '名称',
+  `sort` smallint(6) NOT NULL DEFAULT '0' COMMENT '排序',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `create_by` bigint(20) DEFAULT NULL COMMENT '创建人',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  `update_by` bigint(20) DEFAULT NULL COMMENT '更新人',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY(`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=COMPACT COMMENT='标签表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tags`
+--
+
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2020-09-10 17:25:34

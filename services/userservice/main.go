@@ -11,6 +11,7 @@ import (
 	"github.com/closetool/blog/system/exit"
 	"github.com/closetool/blog/system/initial"
 	"github.com/closetool/blog/system/messaging"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/closetool/blog/utils/routeutils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -34,6 +35,9 @@ func main() {
 
 	db.DbInit(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserSocial{})
 	db.SyncTables(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserSocial{})
+
+	db.GormInit()
+	db.Migrate(&model.AuthUser{}, &model.AuthToken{}, &model.AuthUserSocial{})
 
 	r := initial.InitServer()
 	routeutils.RegisterRoute(service.Routes, r.Group("/auth"))

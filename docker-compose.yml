@@ -70,7 +70,6 @@ services:
         deploy:
             replicas: 1
     
-    
     userservice:
         image: closetool/userservice
         depends_on:
@@ -100,21 +99,21 @@ services:
         deploy:
             replicas: 1
     
-    #lostsservice:
-    #    image: closetool/postsservice
-    #    depends_on:
-    #        - springcloud
-    #        - mysql
-    #        - rabbitmq
-    #        - userservice
-    #        - logservice
-    #        - categoryservice
-    #    networks:
-    #        - overlay
-    #    ports:
-    #        - "2602:2602"
-    #    deploy:
-    #        replicas: 1
+    postsservice:
+        image: closetool/postsservice
+        depends_on:
+            - springcloud
+            - mysql
+            - rabbitmq
+            - userservice
+            - logservice
+            - categoryservice
+        networks:
+            - overlay
+        ports:
+            - "2602:2602"
+        deploy:
+            replicas: 1
 
     logservice:
         image: closetool/logservice
@@ -126,6 +125,32 @@ services:
             - overlay
         ports:
             - "2603:2603"
+        deploy:
+            replicas: 1
+
+    menuservice:
+        image: closetool/menuservice
+        depends_on:
+            - springcloud
+            - mysql
+            - rabbitmq
+        networks:
+            - overlay
+        ports:
+            - "2604:2604"
+        deploy:
+            replicas: 1
+
+    configservice:
+        image: closetool/configservice
+        depends_on:
+            - springcloud
+            - mysql
+            - rabbitmq
+        networks:
+            - overlay
+        ports:
+            - "2605:2605"
         deploy:
             replicas: 1
 

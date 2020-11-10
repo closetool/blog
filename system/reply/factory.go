@@ -82,6 +82,12 @@ func CreateJSONsuccess(c *gin.Context) {
 	c.JSON(http.StatusOK, CreateWithSuccess())
 }
 
+func CreateJSONExtra(c *gin.Context, extra interface{}) {
+	r := CreateWithModels(nil)
+	r.Extra = extra
+	c.JSON(http.StatusOK, r)
+}
+
 func ErrorBytes(errorCode int) []byte {
 	bytes, err := jsoniter.Marshal(CreateWithErrorX(errorCode))
 	if err != nil {

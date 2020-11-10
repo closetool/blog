@@ -18,6 +18,7 @@ require (
 	github.com/gookit/color v1.3.2 // indirect
 	github.com/guregu/null v4.0.0+incompatible
 	github.com/iancoleman/strcase v0.1.2 // indirect
+	github.com/infobloxopen/protoc-gen-gorm v0.20.0 // indirect
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/jimsmart/schema v0.0.6 // indirect
 	github.com/jinzhu/gorm v1.9.16

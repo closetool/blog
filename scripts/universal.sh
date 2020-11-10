@@ -36,3 +36,6 @@ do
 	rm config.yml
 	cd $home
 done
+
+cd ../
+./nginx.sh

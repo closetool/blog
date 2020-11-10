@@ -43,6 +43,7 @@ func (p PostsAndTags) TableName() string {
 }
 
 func getPostsListWeight(c *gin.Context, IsWeight int64) {
+	logrus.Debugln(c.Request.URL.RawQuery)
 	postsVO := vo.Posts{Status: -1}
 	c.ShouldBindQuery(&postsVO)
 	logrus.Debugf("%#v", postsVO)

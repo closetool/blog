@@ -41,8 +41,13 @@
 > * /social/v1/list \> /list/v1/social</br> 
 > * /social/v1/info \> /info/v1/social</br>
 > * /social/v1/socials \> /socials/v1/social
+> * /byteblogs/email/v1/send \> /auth/email/v1/send
 
 ## Category Service
+> * /comments/v1/get \> /get/v1/comments
+> * /category-tags/v1/list \> /list/v1/category-tags
+> * /category/v1/list \> /list/v1/category
+> * /tags/v1/list \> /list/v1/tags
 
 ### category
 > * /category-tags/v1/list \> /list/v1/category-tags</br>
@@ -51,10 +56,17 @@
 > * /tags/v1/list \> /list/v1/tags
 
 ## Posts Service
-
 ### posts
 > * /posts/v1/list \> /list/v1/posts
+
+### comments
 > * /comments/v1/get \> /get/v1/comments
+
+## Menu Service
+> * /menu/v1/list \> /list/v1/menu
+
+## Link Service
+> * /link/v1/list \> /list/v1/link
 
 ## FIXME
 * docker swarm中不同node之间的同一overlay网络中的容器无法互相访问，nginx代理只能使用公网

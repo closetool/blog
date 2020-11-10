@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/hmac"
 	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -240,7 +241,6 @@ func saveUserByGithub(c *gin.Context, session *xorm.Session) error {
 }
 
 func registerAdminByGithub(c *gin.Context, session *xorm.Session) error {
-	logrus.Debugln("/auth/admin/v1/register was called")
 	userVO := vo.CreateDefaultAuthUser()
 	err := c.ShouldBindJSON(userVO)
 	if err != nil {
@@ -257,12 +257,14 @@ func registerAdminByGithub(c *gin.Context, session *xorm.Session) error {
 		return err
 	}
 
+	passwdHash := fmt.Sprintf("%x", sha256.Sum256([]byte(userVO.Password)))
+
 	if !ok {
 		userPO := &po.AuthUser{
 			Name:     userVO.Email,
 			Email:    userVO.Email,
 			RoleId:   constants.RoleAdmin,
-			Password: fmt.Sprintf("%x", md5.Sum([]byte(userVO.Password))),
+			Password: fmt.Sprintf("%x", md5.Sum([]byte(passwdHash))),
 		}
 		_, err := session.InsertOne(userPO)
 		if err != nil {
@@ -692,4 +694,8 @@ func socialList(c *gin.Context, enabled int) {
 	}
 
 	reply.CreateJSONPaging(c, results, page)
+}
+
+func sendEmail(c *gin.Context) {
+	reply.CreateJSONsuccess(c)
 }
