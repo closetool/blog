@@ -17,8 +17,8 @@ type Posts struct {
 	Summary    string    `xorm:"not null comment('摘要') VARCHAR(255)"`
 	Views      int       `xorm:"not null default 0 comment('浏览次数') INT(11)"`
 	Weight     int       `xorm:"not null default 0 comment('文章权重') INT(11)"`
-	CreateTime time.Time `xorm:"not null comment('创建时间') DATETIME"`
-	UpdateTime time.Time `xorm:"not null comment('更新时间') DATETIME"`
+	CreateTime time.Time `xorm:"not null comment('创建时间') DATETIME created"`
+	UpdateTime time.Time `xorm:"not null comment('更新时间') DATETIME updated"`
 }
 
 func (p Posts) TableName() string {

@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
+	"github.com/sirupsen/logrus"
 )
 
 func CreateWithError() *Reply {
@@ -78,4 +80,37 @@ func CreateJSONPaging(c *gin.Context, models []interface{}, page *PageInfo) {
 
 func CreateJSONsuccess(c *gin.Context) {
 	c.JSON(http.StatusOK, CreateWithSuccess())
+}
+
+func CreateJSONExtra(c *gin.Context, extra interface{}) {
+	r := CreateWithModels(nil)
+	r.Extra = extra
+	c.JSON(http.StatusOK, r)
+}
+
+func ErrorBytes(errorCode int) []byte {
+	bytes, err := jsoniter.Marshal(CreateWithErrorX(errorCode))
+	if err != nil {
+		logrus.Errorf("marshal encountered an error: %v", err)
+		return nil
+	}
+	return bytes
+}
+
+func ModelBytes(model interface{}) []byte {
+	bytes, err := jsoniter.Marshal(CreateWithModel(model))
+	if err != nil {
+		logrus.Errorf("marshal encountered an error: %v", err)
+		return nil
+	}
+	return bytes
+}
+
+func ModelsBytes(models []interface{}) []byte {
+	bytes, err := jsoniter.Marshal(CreateWithModels(models))
+	if err != nil {
+		logrus.Errorf("marshal encountered an error: %v", err)
+		return nil
+	}
+	return bytes
 }

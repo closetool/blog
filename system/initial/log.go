@@ -11,6 +11,8 @@ import (
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 )
 
+var Dst io.Writer
+
 func InitLog() {
 	logrus.SetFormatter(&easy.Formatter{
 		TimestampFormat: "2006-01-02 15:04:05",
@@ -30,6 +32,8 @@ func InitLog() {
 		logrus.Panicf("create log file failed: %v", err)
 	}
 
-	logrus.SetOutput(io.MultiWriter(file, os.Stdout))
+	Dst = io.MultiWriter(file, os.Stdout)
+
+	logrus.SetOutput(Dst)
 	logrus.Infoln("logger initialized")
 }

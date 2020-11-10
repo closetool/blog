@@ -1,6 +1,8 @@
 package constants
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	AuthHeader = "Authorization"
@@ -14,6 +16,27 @@ const (
 
 	SocialIsHome  = 1
 	SocialEnabled = 1
+
+	TreePath = "."
+
+	ConfigTypeBase      = 0
+	ConfigTypeQiniu     = 1
+	ConfigTypeMusicId   = 2
+	ConfigTypeStoreType = 3
+	ConfigTypeAliyun    = 4
+	ConfigTypeCross     = 5
+	ConfigTypeDefault   = 6
+
+	DefaultPathKey     = "default_path"
+	DefaultPathValue   = "~/file"
+	DefaultImageDomain = "default_image_domain"
+	FileURL            = "/files/"
+
+	StoreType   = "store_type"
+	DefaultType = "default"
+	AliyunOss   = "aliyun_oss"
+	QiNiu       = "qiniu"
+	COS         = "cos"
 )
 
 var (

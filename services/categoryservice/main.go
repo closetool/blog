@@ -5,6 +5,7 @@ import (
 
 	"github.com/closetool/blog/services/categoryservice/models/po"
 	"github.com/closetool/blog/services/categoryservice/service"
+	"github.com/closetool/blog/services/categoryservice/service/amqp"
 	"github.com/closetool/blog/system/config"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/exit"
@@ -40,6 +41,11 @@ func main() {
 
 	messaging.Client = new(messaging.MessagingClient)
 	messaging.Client.ConnectToBroker(viper.GetString("amqp_location"))
+
+	amqp.GetCategoryNameById()
+	amqp.GetTagsByName()
+	amqp.GetTagsByIds()
+	amqp.AddTags()
 
 	exit.Listen(func() {})
 

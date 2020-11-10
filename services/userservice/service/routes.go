@@ -38,4 +38,5 @@ var Routes = []models.Route{
 	//TODO
 	{Method: "GET", Pattern: "/socials/v1/social", MiddleWare: nil, HandlerFunc: getSocialEnableList},
 	{Method: "GET", Pattern: "/info/v1/social", MiddleWare: nil, HandlerFunc: getSocialInfo},
+	{Method: "POST", Pattern: "/email/v1/send", MiddleWare: nil, HandlerFunc: sendEmail},
 }

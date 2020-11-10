@@ -3,6 +3,7 @@ package pageutils
 import (
 	"github.com/closetool/blog/system/models"
 	"github.com/closetool/blog/system/reply"
+	"github.com/sirupsen/logrus"
 )
 
 var defaultPage = reply.PageInfo{
@@ -13,6 +14,7 @@ var defaultPage = reply.PageInfo{
 
 func CheckAndInitPage(base *models.BaseVO) *reply.PageInfo {
 	if base == nil {
+		logrus.Infoln("page info is null")
 		return &reply.PageInfo{
 			Page:  defaultPage.Page,
 			Size:  defaultPage.Size,

@@ -1,0 +1,1357 @@
+syntax = "proto3";
+
+package test;
+import "google/protobuf/timestamp.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+
+option (gogoproto.populate_all) = true;
+option go_package = "model";
+option (gogoproto.equal_all) = true;
+option (gogoproto.gostring_all) = true;
+
+message Result {
+    enum result_type {
+        Error = 0;
+        Success = 1;
+    }
+
+    result_type code = 1 [(gogoproto.customname) = 'Code', (gogoproto.moretags) = 'json:"code" xml:"code" db:"code"'];
+    string message = 2 [(gogoproto.customname) = 'Message', (gogoproto.moretags) = 'json:"message" xml:"message" db:"message"'];
+}
+
+
+message packet {
+    enum packet_type_t {
+        Error = 0;
+         
+        //PktAuthToken = 0;
+        //PktAuthUser = 1;
+        //PktAuthUserLog = 2;
+        //PktAuthUserSocial = 3;
+        //PktBlackList = 4;
+        //PktCategory = 5;
+        //PktCategoryTags = 6;
+        //PktConfig = 7;
+        //PktFriendshipLink = 8;
+        //PktMenu = 9;
+        //PktPosts = 10;
+        //PktPostsAttribute = 11;
+        //PktPostsComments = 12;
+        //PktPostsTags = 13;
+        //PktTags = 14;
+    }
+
+    packet_type_t id = 2;
+    bytes data = 3;
+}
+service Backend {
+
+    rpc GetAllAuthToken(GetAllAuthTokenRequest) returns (GetAllAuthTokenResponse);
+    rpc GetAuthToken(GetAuthTokenRequest) returns (GetAuthTokenResponse);
+    rpc AddAuthToken(AddAuthTokenRequest) returns (AddAuthTokenResponse);
+    rpc UpdateAuthToken(UpdateAuthTokenRequest) returns (UpdateAuthTokenResponse);
+    rpc DeleteAuthToken(DeleteAuthTokenRequest) returns (DeleteAuthTokenResponse);
+    rpc GetAllAuthUser(GetAllAuthUserRequest) returns (GetAllAuthUserResponse);
+    rpc GetAuthUser(GetAuthUserRequest) returns (GetAuthUserResponse);
+    rpc AddAuthUser(AddAuthUserRequest) returns (AddAuthUserResponse);
+    rpc UpdateAuthUser(UpdateAuthUserRequest) returns (UpdateAuthUserResponse);
+    rpc DeleteAuthUser(DeleteAuthUserRequest) returns (DeleteAuthUserResponse);
+    rpc GetAllAuthUserLog(GetAllAuthUserLogRequest) returns (GetAllAuthUserLogResponse);
+    rpc GetAuthUserLog(GetAuthUserLogRequest) returns (GetAuthUserLogResponse);
+    rpc AddAuthUserLog(AddAuthUserLogRequest) returns (AddAuthUserLogResponse);
+    rpc UpdateAuthUserLog(UpdateAuthUserLogRequest) returns (UpdateAuthUserLogResponse);
+    rpc DeleteAuthUserLog(DeleteAuthUserLogRequest) returns (DeleteAuthUserLogResponse);
+    rpc GetAllAuthUserSocial(GetAllAuthUserSocialRequest) returns (GetAllAuthUserSocialResponse);
+    rpc GetAuthUserSocial(GetAuthUserSocialRequest) returns (GetAuthUserSocialResponse);
+    rpc AddAuthUserSocial(AddAuthUserSocialRequest) returns (AddAuthUserSocialResponse);
+    rpc UpdateAuthUserSocial(UpdateAuthUserSocialRequest) returns (UpdateAuthUserSocialResponse);
+    rpc DeleteAuthUserSocial(DeleteAuthUserSocialRequest) returns (DeleteAuthUserSocialResponse);
+    rpc GetAllBlackList(GetAllBlackListRequest) returns (GetAllBlackListResponse);
+    rpc GetBlackList(GetBlackListRequest) returns (GetBlackListResponse);
+    rpc AddBlackList(AddBlackListRequest) returns (AddBlackListResponse);
+    rpc UpdateBlackList(UpdateBlackListRequest) returns (UpdateBlackListResponse);
+    rpc DeleteBlackList(DeleteBlackListRequest) returns (DeleteBlackListResponse);
+    rpc GetAllCategory(GetAllCategoryRequest) returns (GetAllCategoryResponse);
+    rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse);
+    rpc AddCategory(AddCategoryRequest) returns (AddCategoryResponse);
+    rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse);
+    rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
+    rpc GetAllCategoryTags(GetAllCategoryTagsRequest) returns (GetAllCategoryTagsResponse);
+    rpc GetCategoryTags(GetCategoryTagsRequest) returns (GetCategoryTagsResponse);
+    rpc AddCategoryTags(AddCategoryTagsRequest) returns (AddCategoryTagsResponse);
+    rpc UpdateCategoryTags(UpdateCategoryTagsRequest) returns (UpdateCategoryTagsResponse);
+    rpc DeleteCategoryTags(DeleteCategoryTagsRequest) returns (DeleteCategoryTagsResponse);
+    rpc GetAllConfig(GetAllConfigRequest) returns (GetAllConfigResponse);
+    rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+    rpc AddConfig(AddConfigRequest) returns (AddConfigResponse);
+    rpc UpdateConfig(UpdateConfigRequest) returns (UpdateConfigResponse);
+    rpc DeleteConfig(DeleteConfigRequest) returns (DeleteConfigResponse);
+    rpc GetAllFriendshipLink(GetAllFriendshipLinkRequest) returns (GetAllFriendshipLinkResponse);
+    rpc GetFriendshipLink(GetFriendshipLinkRequest) returns (GetFriendshipLinkResponse);
+    rpc AddFriendshipLink(AddFriendshipLinkRequest) returns (AddFriendshipLinkResponse);
+    rpc UpdateFriendshipLink(UpdateFriendshipLinkRequest) returns (UpdateFriendshipLinkResponse);
+    rpc DeleteFriendshipLink(DeleteFriendshipLinkRequest) returns (DeleteFriendshipLinkResponse);
+    rpc GetAllMenu(GetAllMenuRequest) returns (GetAllMenuResponse);
+    rpc GetMenu(GetMenuRequest) returns (GetMenuResponse);
+    rpc AddMenu(AddMenuRequest) returns (AddMenuResponse);
+    rpc UpdateMenu(UpdateMenuRequest) returns (UpdateMenuResponse);
+    rpc DeleteMenu(DeleteMenuRequest) returns (DeleteMenuResponse);
+    rpc GetAllPosts(GetAllPostsRequest) returns (GetAllPostsResponse);
+    rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
+    rpc AddPosts(AddPostsRequest) returns (AddPostsResponse);
+    rpc UpdatePosts(UpdatePostsRequest) returns (UpdatePostsResponse);
+    rpc DeletePosts(DeletePostsRequest) returns (DeletePostsResponse);
+    rpc GetAllPostsAttribute(GetAllPostsAttributeRequest) returns (GetAllPostsAttributeResponse);
+    rpc GetPostsAttribute(GetPostsAttributeRequest) returns (GetPostsAttributeResponse);
+    rpc AddPostsAttribute(AddPostsAttributeRequest) returns (AddPostsAttributeResponse);
+    rpc UpdatePostsAttribute(UpdatePostsAttributeRequest) returns (UpdatePostsAttributeResponse);
+    rpc DeletePostsAttribute(DeletePostsAttributeRequest) returns (DeletePostsAttributeResponse);
+    rpc GetAllPostsComments(GetAllPostsCommentsRequest) returns (GetAllPostsCommentsResponse);
+    rpc GetPostsComments(GetPostsCommentsRequest) returns (GetPostsCommentsResponse);
+    rpc AddPostsComments(AddPostsCommentsRequest) returns (AddPostsCommentsResponse);
+    rpc UpdatePostsComments(UpdatePostsCommentsRequest) returns (UpdatePostsCommentsResponse);
+    rpc DeletePostsComments(DeletePostsCommentsRequest) returns (DeletePostsCommentsResponse);
+    rpc GetAllPostsTags(GetAllPostsTagsRequest) returns (GetAllPostsTagsResponse);
+    rpc GetPostsTags(GetPostsTagsRequest) returns (GetPostsTagsResponse);
+    rpc AddPostsTags(AddPostsTagsRequest) returns (AddPostsTagsResponse);
+    rpc UpdatePostsTags(UpdatePostsTagsRequest) returns (UpdatePostsTagsResponse);
+    rpc DeletePostsTags(DeletePostsTagsRequest) returns (DeletePostsTagsResponse);
+    rpc GetAllTags(GetAllTagsRequest) returns (GetAllTagsResponse);
+    rpc GetTags(GetTagsRequest) returns (GetTagsResponse);
+    rpc AddTags(AddTagsRequest) returns (AddTagsResponse);
+    rpc UpdateTags(UpdateTagsRequest) returns (UpdateTagsResponse);
+    rpc DeleteTags(DeleteTagsRequest) returns (DeleteTagsResponse);
+}
+
+
+// table: auth_token
+message AuthToken {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] token                                          varchar(256)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 256     default: []
+    string token = 2 [(gogoproto.customname) = 'Token', (gogoproto.moretags) = 'gorm:\"column:token;type:varchar;size:256;\" json:\"token\" xml:\"token\" db:\"token\"'];
+    // Column: [ 2] expire_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp expire_time = 3 [(gogoproto.customname) = 'ExpireTime', (gogoproto.moretags) = 'gorm:\"column:expire_time;type:datetime;\" json:\"expire_time\" xml:\"expire_time\" db:\"expire_time\"'];
+    // Column: [ 3] user_id                                        bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 user_id = 4 [(gogoproto.customname) = 'UserID', (gogoproto.moretags) = 'gorm:\"column:user_id;type:bigint;\" json:\"user_id\" xml:\"user_id\" db:\"user_id\"'];
+}
+
+
+message GetAllAuthTokenRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllAuthTokenResponse {
+    Result result = 1;
+    repeated AuthToken data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetAuthTokenRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetAuthTokenResponse {
+    Result result = 1;
+    AuthToken data = 2;
+}
+message AddAuthTokenRequest {
+    AuthToken data = 1;
+}
+
+message AddAuthTokenResponse {
+    Result result = 1;
+    AuthToken data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateAuthTokenRequest {
+    AuthToken data = 1;
+}
+
+message UpdateAuthTokenResponse {
+    Result result = 1;
+    AuthToken data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteAuthTokenRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteAuthTokenResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: auth_user
+message AuthUser {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] social_id                                      varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string social_id = 2 [(gogoproto.customname) = 'SocialID', (gogoproto.moretags) = 'gorm:\"column:social_id;type:varchar;size:255;\" json:\"social_id\" xml:\"social_id\" db:\"social_id\"'];
+    // Column: [ 2] password                                       varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string password = 3 [(gogoproto.customname) = 'Password', (gogoproto.moretags) = 'gorm:\"column:password;type:varchar;size:255;\" json:\"password\" xml:\"password\" db:\"password\"'];
+    // Column: [ 3] name                                           varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string name = 4 [(gogoproto.customname) = 'Name', (gogoproto.moretags) = 'gorm:\"column:name;type:varchar;size:255;\" json:\"name\" xml:\"name\" db:\"name\"'];
+    // Column: [ 4] role_id                                        bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 role_id = 5 [(gogoproto.customname) = 'RoleID', (gogoproto.moretags) = 'gorm:\"column:role_id;type:bigint;\" json:\"role_id\" xml:\"role_id\" db:\"role_id\"'];
+    // Column: [ 5] email                                          varchar(128)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 128     default: []
+    string email = 6 [(gogoproto.customname) = 'Email', (gogoproto.moretags) = 'gorm:\"column:email;type:varchar;size:128;\" json:\"email\" xml:\"email\" db:\"email\"'];
+    // Column: [ 6] introduction                                   varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string introduction = 7 [(gogoproto.customname) = 'Introduction', (gogoproto.moretags) = 'gorm:\"column:introduction;type:varchar;size:255;\" json:\"introduction\" xml:\"introduction\" db:\"introduction\"'];
+    // Column: [ 7] avatar                                         varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string avatar = 8 [(gogoproto.customname) = 'Avatar', (gogoproto.moretags) = 'gorm:\"column:avatar;type:varchar;size:255;\" json:\"avatar\" xml:\"avatar\" db:\"avatar\"'];
+    // Column: [ 8] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 9 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+    // Column: [ 9] access_key                                     varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string access_key = 10 [(gogoproto.customname) = 'AccessKey', (gogoproto.moretags) = 'gorm:\"column:access_key;type:varchar;size:255;\" json:\"access_key\" xml:\"access_key\" db:\"access_key\"'];
+    // Column: [10] secret_key                                     varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string secret_key = 11 [(gogoproto.customname) = 'SecretKey', (gogoproto.moretags) = 'gorm:\"column:secret_key;type:varchar;size:255;\" json:\"secret_key\" xml:\"secret_key\" db:\"secret_key\"'];
+    // Column: [11] status                                         int                  null: true   primary: false  isArray: false  auto: false  col: int             len: -1      default: [0]
+    int32 status = 12 [(gogoproto.customname) = 'Status', (gogoproto.moretags) = 'gorm:\"column:status;type:int;default:0;\" json:\"status\" xml:\"status\" db:\"status\"'];
+}
+
+
+message GetAllAuthUserRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllAuthUserResponse {
+    Result result = 1;
+    repeated AuthUser data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetAuthUserRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetAuthUserResponse {
+    Result result = 1;
+    AuthUser data = 2;
+}
+message AddAuthUserRequest {
+    AuthUser data = 1;
+}
+
+message AddAuthUserResponse {
+    Result result = 1;
+    AuthUser data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateAuthUserRequest {
+    AuthUser data = 1;
+}
+
+message UpdateAuthUserResponse {
+    Result result = 1;
+    AuthUser data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteAuthUserRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteAuthUserResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: auth_user_log
+message AuthUserLog {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] user_id                                        varchar(20)          null: false  primary: false  isArray: false  auto: false  col: varchar         len: 20      default: []
+    string user_id = 2 [(gogoproto.customname) = 'UserID', (gogoproto.moretags) = 'gorm:\"column:user_id;type:varchar;size:20;\" json:\"user_id\" xml:\"user_id\" db:\"user_id\"'];
+    // Column: [ 2] ip                                             varchar(32)          null: false  primary: false  isArray: false  auto: false  col: varchar         len: 32      default: []
+    string ip = 3 [(gogoproto.customname) = 'IP', (gogoproto.moretags) = 'gorm:\"column:ip;type:varchar;size:32;\" json:\"ip\" xml:\"ip\" db:\"ip\"'];
+    // Column: [ 3] url                                            varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string url = 4 [(gogoproto.customname) = 'URL', (gogoproto.moretags) = 'gorm:\"column:url;type:varchar;size:255;\" json:\"url\" xml:\"url\" db:\"url\"'];
+    // Column: [ 4] parameter                                      varchar(5000)        null: true   primary: false  isArray: false  auto: false  col: varchar         len: 5000    default: []
+    string parameter = 5 [(gogoproto.customname) = 'Parameter', (gogoproto.moretags) = 'gorm:\"column:parameter;type:varchar;size:5000;\" json:\"parameter\" xml:\"parameter\" db:\"parameter\"'];
+    // Column: [ 5] device                                         varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string device = 6 [(gogoproto.customname) = 'Device', (gogoproto.moretags) = 'gorm:\"column:device;type:varchar;size:255;\" json:\"device\" xml:\"device\" db:\"device\"'];
+    // Column: [ 6] description                                    varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string description = 7 [(gogoproto.customname) = 'Description', (gogoproto.moretags) = 'gorm:\"column:description;type:varchar;size:255;\" json:\"description\" xml:\"description\" db:\"description\"'];
+    // Column: [ 7] code                                           varchar(10)          null: true   primary: false  isArray: false  auto: false  col: varchar         len: 10      default: []
+    string code = 8 [(gogoproto.customname) = 'Code', (gogoproto.moretags) = 'gorm:\"column:code;type:varchar;size:10;\" json:\"code\" xml:\"code\" db:\"code\"'];
+    // Column: [ 8] run_time                                       bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 run_time = 9 [(gogoproto.customname) = 'RunTime', (gogoproto.moretags) = 'gorm:\"column:run_time;type:bigint;\" json:\"run_time\" xml:\"run_time\" db:\"run_time\"'];
+    // Column: [ 9] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 10 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+    // Column: [10] browser_name                                   varchar(100)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 100     default: []
+    string browser_name = 11 [(gogoproto.customname) = 'BrowserName', (gogoproto.moretags) = 'gorm:\"column:browser_name;type:varchar;size:100;\" json:\"browser_name\" xml:\"browser_name\" db:\"browser_name\"'];
+    // Column: [11] browser_version                                varchar(100)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 100     default: []
+    string browser_version = 12 [(gogoproto.customname) = 'BrowserVersion', (gogoproto.moretags) = 'gorm:\"column:browser_version;type:varchar;size:100;\" json:\"browser_version\" xml:\"browser_version\" db:\"browser_version\"'];
+}
+
+
+message GetAllAuthUserLogRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllAuthUserLogResponse {
+    Result result = 1;
+    repeated AuthUserLog data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetAuthUserLogRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetAuthUserLogResponse {
+    Result result = 1;
+    AuthUserLog data = 2;
+}
+message AddAuthUserLogRequest {
+    AuthUserLog data = 1;
+}
+
+message AddAuthUserLogResponse {
+    Result result = 1;
+    AuthUserLog data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateAuthUserLogRequest {
+    AuthUserLog data = 1;
+}
+
+message UpdateAuthUserLogResponse {
+    Result result = 1;
+    AuthUserLog data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteAuthUserLogRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteAuthUserLogResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: auth_user_social
+message AuthUserSocial {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] code                                           varchar(32)          null: false  primary: false  isArray: false  auto: false  col: varchar         len: 32      default: []
+    string code = 2 [(gogoproto.customname) = 'Code', (gogoproto.moretags) = 'gorm:\"column:code;type:varchar;size:32;\" json:\"code\" xml:\"code\" db:\"code\"'];
+    // Column: [ 2] content                                        varchar(100)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 100     default: []
+    string content = 3 [(gogoproto.customname) = 'Content', (gogoproto.moretags) = 'gorm:\"column:content;type:varchar;size:100;\" json:\"content\" xml:\"content\" db:\"content\"'];
+    // Column: [ 3] show_type                                      smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: []
+    int32 show_type = 4 [(gogoproto.customname) = 'ShowType', (gogoproto.moretags) = 'gorm:\"column:show_type;type:smallint;\" json:\"show_type\" xml:\"show_type\" db:\"show_type\"'];
+    // Column: [ 4] remark                                         varchar(150)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 150     default: []
+    string remark = 5 [(gogoproto.customname) = 'Remark', (gogoproto.moretags) = 'gorm:\"column:remark;type:varchar;size:150;\" json:\"remark\" xml:\"remark\" db:\"remark\"'];
+    // Column: [ 5] icon                                           varchar(100)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 100     default: []
+    string icon = 6 [(gogoproto.customname) = 'Icon', (gogoproto.moretags) = 'gorm:\"column:icon;type:varchar;size:100;\" json:\"icon\" xml:\"icon\" db:\"icon\"'];
+    // Column: [ 6] is_enabled                                     smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 is_enabled = 7 [(gogoproto.customname) = 'IsEnabled', (gogoproto.moretags) = 'gorm:\"column:is_enabled;type:smallint;default:0;\" json:\"is_enabled\" xml:\"is_enabled\" db:\"is_enabled\"'];
+    // Column: [ 7] is_home                                        smallint             null: true   primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 is_home = 8 [(gogoproto.customname) = 'IsHome', (gogoproto.moretags) = 'gorm:\"column:is_home;type:smallint;default:0;\" json:\"is_home\" xml:\"is_home\" db:\"is_home\"'];
+    // Column: [ 8] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 9 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+    // Column: [ 9] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp update_time = 10 [(gogoproto.customname) = 'UpdateTime', (gogoproto.moretags) = 'gorm:\"column:update_time;type:datetime;\" json:\"update_time\" xml:\"update_time\" db:\"update_time\"'];
+}
+
+
+message GetAllAuthUserSocialRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllAuthUserSocialResponse {
+    Result result = 1;
+    repeated AuthUserSocial data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetAuthUserSocialRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetAuthUserSocialResponse {
+    Result result = 1;
+    AuthUserSocial data = 2;
+}
+message AddAuthUserSocialRequest {
+    AuthUserSocial data = 1;
+}
+
+message AddAuthUserSocialResponse {
+    Result result = 1;
+    AuthUserSocial data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateAuthUserSocialRequest {
+    AuthUserSocial data = 1;
+}
+
+message UpdateAuthUserSocialResponse {
+    Result result = 1;
+    AuthUserSocial data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteAuthUserSocialRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteAuthUserSocialResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: black_list
+message BlackList {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] ip_range                                       varchar(150)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 150     default: []
+    string ip_range = 2 [(gogoproto.customname) = 'IPRange', (gogoproto.moretags) = 'gorm:\"column:ip_range;type:varchar;size:150;\" json:\"ip_range\" xml:\"ip_range\" db:\"ip_range\"'];
+    // Column: [ 2] is_enable                                      int                  null: true   primary: false  isArray: false  auto: false  col: int             len: -1      default: [0]
+    int32 is_enable = 3 [(gogoproto.customname) = 'IsEnable', (gogoproto.moretags) = 'gorm:\"column:is_enable;type:int;default:0;\" json:\"is_enable\" xml:\"is_enable\" db:\"is_enable\"'];
+    // Column: [ 3] create_user                                    varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string create_user = 4 [(gogoproto.customname) = 'CreateUser', (gogoproto.moretags) = 'gorm:\"column:create_user;type:varchar;size:255;\" json:\"create_user\" xml:\"create_user\" db:\"create_user\"'];
+    // Column: [ 4] create_time                                    datetime             null: true   primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 5 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+    // Column: [ 5] update_user                                    datetime             null: true   primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp update_user = 6 [(gogoproto.customname) = 'UpdateUser', (gogoproto.moretags) = 'gorm:\"column:update_user;type:datetime;\" json:\"update_user\" xml:\"update_user\" db:\"update_user\"'];
+    // Column: [ 6] update_time                                    datetime             null: true   primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp update_time = 7 [(gogoproto.customname) = 'UpdateTime', (gogoproto.moretags) = 'gorm:\"column:update_time;type:datetime;\" json:\"update_time\" xml:\"update_time\" db:\"update_time\"'];
+}
+
+
+message GetAllBlackListRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllBlackListResponse {
+    Result result = 1;
+    repeated BlackList data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetBlackListRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetBlackListResponse {
+    Result result = 1;
+    BlackList data = 2;
+}
+message AddBlackListRequest {
+    BlackList data = 1;
+}
+
+message AddBlackListResponse {
+    Result result = 1;
+    BlackList data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateBlackListRequest {
+    BlackList data = 1;
+}
+
+message UpdateBlackListResponse {
+    Result result = 1;
+    BlackList data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteBlackListRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteBlackListResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: category
+message Category {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] name                                           varchar(32)          null: false  primary: false  isArray: false  auto: false  col: varchar         len: 32      default: []
+    string name = 2 [(gogoproto.customname) = 'Name', (gogoproto.moretags) = 'gorm:\"column:name;type:varchar;size:32;\" json:\"name\" xml:\"name\" db:\"name\"'];
+    // Column: [ 2] sort                                           smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 sort = 3 [(gogoproto.customname) = 'Sort', (gogoproto.moretags) = 'gorm:\"column:sort;type:smallint;default:0;\" json:\"sort\" xml:\"sort\" db:\"sort\"'];
+    // Column: [ 3] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 4 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+    // Column: [ 4] create_by                                      bigint               null: true   primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 create_by = 5 [(gogoproto.customname) = 'CreateBy', (gogoproto.moretags) = 'gorm:\"column:create_by;type:bigint;\" json:\"create_by\" xml:\"create_by\" db:\"create_by\"'];
+    // Column: [ 5] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp update_time = 6 [(gogoproto.customname) = 'UpdateTime', (gogoproto.moretags) = 'gorm:\"column:update_time;type:datetime;\" json:\"update_time\" xml:\"update_time\" db:\"update_time\"'];
+    // Column: [ 6] update_by                                      bigint               null: true   primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 update_by = 7 [(gogoproto.customname) = 'UpdateBy', (gogoproto.moretags) = 'gorm:\"column:update_by;type:bigint;\" json:\"update_by\" xml:\"update_by\" db:\"update_by\"'];
+}
+
+
+message GetAllCategoryRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllCategoryResponse {
+    Result result = 1;
+    repeated Category data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetCategoryRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetCategoryResponse {
+    Result result = 1;
+    Category data = 2;
+}
+message AddCategoryRequest {
+    Category data = 1;
+}
+
+message AddCategoryResponse {
+    Result result = 1;
+    Category data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateCategoryRequest {
+    Category data = 1;
+}
+
+message UpdateCategoryResponse {
+    Result result = 1;
+    Category data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteCategoryRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteCategoryResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: category_tags
+message CategoryTags {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] tags_id                                        bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 tags_id = 2 [(gogoproto.customname) = 'TagsID', (gogoproto.moretags) = 'gorm:\"column:tags_id;type:bigint;\" json:\"tags_id\" xml:\"tags_id\" db:\"tags_id\"'];
+    // Column: [ 2] category_id                                    bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 category_id = 3 [(gogoproto.customname) = 'CategoryID', (gogoproto.moretags) = 'gorm:\"column:category_id;type:bigint;\" json:\"category_id\" xml:\"category_id\" db:\"category_id\"'];
+    // Column: [ 3] sort                                           smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 sort = 4 [(gogoproto.customname) = 'Sort', (gogoproto.moretags) = 'gorm:\"column:sort;type:smallint;default:0;\" json:\"sort\" xml:\"sort\" db:\"sort\"'];
+    // Column: [ 4] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 5 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+    // Column: [ 5] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp update_time = 6 [(gogoproto.customname) = 'UpdateTime', (gogoproto.moretags) = 'gorm:\"column:update_time;type:datetime;\" json:\"update_time\" xml:\"update_time\" db:\"update_time\"'];
+}
+
+
+message GetAllCategoryTagsRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllCategoryTagsResponse {
+    Result result = 1;
+    repeated CategoryTags data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetCategoryTagsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetCategoryTagsResponse {
+    Result result = 1;
+    CategoryTags data = 2;
+}
+message AddCategoryTagsRequest {
+    CategoryTags data = 1;
+}
+
+message AddCategoryTagsResponse {
+    Result result = 1;
+    CategoryTags data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateCategoryTagsRequest {
+    CategoryTags data = 1;
+}
+
+message UpdateCategoryTagsResponse {
+    Result result = 1;
+    CategoryTags data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteCategoryTagsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteCategoryTagsResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: config
+message Config {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] config_key                                     varchar(128)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 128     default: []
+    string config_key = 2 [(gogoproto.customname) = 'ConfigKey', (gogoproto.moretags) = 'gorm:\"column:config_key;type:varchar;size:128;\" json:\"config_key\" xml:\"config_key\" db:\"config_key\"'];
+    // Column: [ 2] config_value                                   varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string config_value = 3 [(gogoproto.customname) = 'ConfigValue', (gogoproto.moretags) = 'gorm:\"column:config_value;type:varchar;size:255;\" json:\"config_value\" xml:\"config_value\" db:\"config_value\"'];
+    // Column: [ 3] type                                           smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 type = 4 [(gogoproto.customname) = 'Type', (gogoproto.moretags) = 'gorm:\"column:type;type:smallint;default:0;\" json:\"type\" xml:\"type\" db:\"type\"'];
+}
+
+
+message GetAllConfigRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllConfigResponse {
+    Result result = 1;
+    repeated Config data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetConfigRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetConfigResponse {
+    Result result = 1;
+    Config data = 2;
+}
+message AddConfigRequest {
+    Config data = 1;
+}
+
+message AddConfigResponse {
+    Result result = 1;
+    Config data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateConfigRequest {
+    Config data = 1;
+}
+
+message UpdateConfigResponse {
+    Result result = 1;
+    Config data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteConfigRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteConfigResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: friendship_link
+message FriendshipLink {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] title                                          varchar(30)          null: true   primary: false  isArray: false  auto: false  col: varchar         len: 30      default: []
+    string title = 2 [(gogoproto.customname) = 'Title', (gogoproto.moretags) = 'gorm:\"column:title;type:varchar;size:30;\" json:\"title\" xml:\"title\" db:\"title\"'];
+    // Column: [ 2] name                                           varchar(32)          null: false  primary: false  isArray: false  auto: false  col: varchar         len: 32      default: []
+    string name = 3 [(gogoproto.customname) = 'Name', (gogoproto.moretags) = 'gorm:\"column:name;type:varchar;size:32;\" json:\"name\" xml:\"name\" db:\"name\"'];
+    // Column: [ 3] logo                                           varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string logo = 4 [(gogoproto.customname) = 'Logo', (gogoproto.moretags) = 'gorm:\"column:logo;type:varchar;size:255;\" json:\"logo\" xml:\"logo\" db:\"logo\"'];
+    // Column: [ 4] href                                           varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string href = 5 [(gogoproto.customname) = 'Href', (gogoproto.moretags) = 'gorm:\"column:href;type:varchar;size:255;\" json:\"href\" xml:\"href\" db:\"href\"'];
+    // Column: [ 5] sort                                           smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 sort = 6 [(gogoproto.customname) = 'Sort', (gogoproto.moretags) = 'gorm:\"column:sort;type:smallint;default:0;\" json:\"sort\" xml:\"sort\" db:\"sort\"'];
+    // Column: [ 6] description                                    varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string description = 7 [(gogoproto.customname) = 'Description', (gogoproto.moretags) = 'gorm:\"column:description;type:varchar;size:255;\" json:\"description\" xml:\"description\" db:\"description\"'];
+}
+
+
+message GetAllFriendshipLinkRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllFriendshipLinkResponse {
+    Result result = 1;
+    repeated FriendshipLink data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetFriendshipLinkRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetFriendshipLinkResponse {
+    Result result = 1;
+    FriendshipLink data = 2;
+}
+message AddFriendshipLinkRequest {
+    FriendshipLink data = 1;
+}
+
+message AddFriendshipLinkResponse {
+    Result result = 1;
+    FriendshipLink data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateFriendshipLinkRequest {
+    FriendshipLink data = 1;
+}
+
+message UpdateFriendshipLinkResponse {
+    Result result = 1;
+    FriendshipLink data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteFriendshipLinkRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteFriendshipLinkResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: menu
+message Menu {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] parent_id                                      bigint               null: true   primary: false  isArray: false  auto: false  col: bigint          len: -1      default: [0]
+    int64 parent_id = 2 [(gogoproto.customname) = 'ParentID', (gogoproto.moretags) = 'gorm:\"column:parent_id;type:bigint;default:0;\" json:\"parent_id\" xml:\"parent_id\" db:\"parent_id\"'];
+    // Column: [ 2] title                                          varchar(32)          null: false  primary: false  isArray: false  auto: false  col: varchar         len: 32      default: []
+    string title = 3 [(gogoproto.customname) = 'Title', (gogoproto.moretags) = 'gorm:\"column:title;type:varchar;size:32;\" json:\"title\" xml:\"title\" db:\"title\"'];
+    // Column: [ 3] icon                                           varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string icon = 4 [(gogoproto.customname) = 'Icon', (gogoproto.moretags) = 'gorm:\"column:icon;type:varchar;size:255;\" json:\"icon\" xml:\"icon\" db:\"icon\"'];
+    // Column: [ 4] url                                            varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string url = 5 [(gogoproto.customname) = 'URL', (gogoproto.moretags) = 'gorm:\"column:url;type:varchar;size:255;\" json:\"url\" xml:\"url\" db:\"url\"'];
+    // Column: [ 5] sort                                           smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 sort = 6 [(gogoproto.customname) = 'Sort', (gogoproto.moretags) = 'gorm:\"column:sort;type:smallint;default:0;\" json:\"sort\" xml:\"sort\" db:\"sort\"'];
+}
+
+
+message GetAllMenuRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllMenuResponse {
+    Result result = 1;
+    repeated Menu data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetMenuRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetMenuResponse {
+    Result result = 1;
+    Menu data = 2;
+}
+message AddMenuRequest {
+    Menu data = 1;
+}
+
+message AddMenuResponse {
+    Result result = 1;
+    Menu data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateMenuRequest {
+    Menu data = 1;
+}
+
+message UpdateMenuResponse {
+    Result result = 1;
+    Menu data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteMenuRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteMenuResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: posts
+message Posts {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] author_id                                      bigint               null: true   primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 author_id = 2 [(gogoproto.customname) = 'AuthorID', (gogoproto.moretags) = 'gorm:\"column:author_id;type:bigint;\" json:\"author_id\" xml:\"author_id\" db:\"author_id\"'];
+    // Column: [ 2] title                                          varchar(64)          null: false  primary: false  isArray: false  auto: false  col: varchar         len: 64      default: []
+    string title = 3 [(gogoproto.customname) = 'Title', (gogoproto.moretags) = 'gorm:\"column:title;type:varchar;size:64;\" json:\"title\" xml:\"title\" db:\"title\"'];
+    // Column: [ 3] thumbnail                                      varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string thumbnail = 4 [(gogoproto.customname) = 'Thumbnail', (gogoproto.moretags) = 'gorm:\"column:thumbnail;type:varchar;size:255;\" json:\"thumbnail\" xml:\"thumbnail\" db:\"thumbnail\"'];
+    // Column: [ 4] comments                                       int                  null: false  primary: false  isArray: false  auto: false  col: int             len: -1      default: [0]
+    int32 comments = 5 [(gogoproto.customname) = 'Comments', (gogoproto.moretags) = 'gorm:\"column:comments;type:int;default:0;\" json:\"comments\" xml:\"comments\" db:\"comments\"'];
+    // Column: [ 5] is_comment                                     smallint             null: true   primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [1]
+    int32 is_comment = 6 [(gogoproto.customname) = 'IsComment', (gogoproto.moretags) = 'gorm:\"column:is_comment;type:smallint;default:1;\" json:\"is_comment\" xml:\"is_comment\" db:\"is_comment\"'];
+    // Column: [ 6] category_id                                    bigint               null: true   primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 category_id = 7 [(gogoproto.customname) = 'CategoryID', (gogoproto.moretags) = 'gorm:\"column:category_id;type:bigint;\" json:\"category_id\" xml:\"category_id\" db:\"category_id\"'];
+    // Column: [ 7] sync_status                                    smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 sync_status = 8 [(gogoproto.customname) = 'SyncStatus', (gogoproto.moretags) = 'gorm:\"column:sync_status;type:smallint;default:0;\" json:\"sync_status\" xml:\"sync_status\" db:\"sync_status\"'];
+    // Column: [ 8] status                                         int                  null: false  primary: false  isArray: false  auto: false  col: int             len: -1      default: [1]
+    int32 status = 9 [(gogoproto.customname) = 'Status', (gogoproto.moretags) = 'gorm:\"column:status;type:int;default:1;\" json:\"status\" xml:\"status\" db:\"status\"'];
+    // Column: [ 9] summary                                        varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string summary = 10 [(gogoproto.customname) = 'Summary', (gogoproto.moretags) = 'gorm:\"column:summary;type:varchar;size:255;\" json:\"summary\" xml:\"summary\" db:\"summary\"'];
+    // Column: [10] views                                          int                  null: false  primary: false  isArray: false  auto: false  col: int             len: -1      default: [0]
+    int32 views = 11 [(gogoproto.customname) = 'Views', (gogoproto.moretags) = 'gorm:\"column:views;type:int;default:0;\" json:\"views\" xml:\"views\" db:\"views\"'];
+    // Column: [11] weight                                         int                  null: false  primary: false  isArray: false  auto: false  col: int             len: -1      default: [0]
+    int32 weight = 12 [(gogoproto.customname) = 'Weight', (gogoproto.moretags) = 'gorm:\"column:weight;type:int;default:0;\" json:\"weight\" xml:\"weight\" db:\"weight\"'];
+    // Column: [12] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 13 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+    // Column: [13] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp update_time = 14 [(gogoproto.customname) = 'UpdateTime', (gogoproto.moretags) = 'gorm:\"column:update_time;type:datetime;\" json:\"update_time\" xml:\"update_time\" db:\"update_time\"'];
+}
+
+
+message GetAllPostsRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllPostsResponse {
+    Result result = 1;
+    repeated Posts data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetPostsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetPostsResponse {
+    Result result = 1;
+    Posts data = 2;
+}
+message AddPostsRequest {
+    Posts data = 1;
+}
+
+message AddPostsResponse {
+    Result result = 1;
+    Posts data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdatePostsRequest {
+    Posts data = 1;
+}
+
+message UpdatePostsResponse {
+    Result result = 1;
+    Posts data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeletePostsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeletePostsResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: posts_attribute
+message PostsAttribute {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] content                                        text(4294967295)     null: false  primary: false  isArray: false  auto: false  col: text            len: 4294967295 default: []
+    string content = 2 [(gogoproto.customname) = 'Content', (gogoproto.moretags) = 'gorm:\"column:content;type:text;size:4294967295;\" json:\"content\" xml:\"content\" db:\"content\"'];
+    // Column: [ 2] posts_id                                       bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 posts_id = 3 [(gogoproto.customname) = 'PostsID', (gogoproto.moretags) = 'gorm:\"column:posts_id;type:bigint;\" json:\"posts_id\" xml:\"posts_id\" db:\"posts_id\"'];
+}
+
+
+message GetAllPostsAttributeRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllPostsAttributeResponse {
+    Result result = 1;
+    repeated PostsAttribute data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetPostsAttributeRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetPostsAttributeResponse {
+    Result result = 1;
+    PostsAttribute data = 2;
+}
+message AddPostsAttributeRequest {
+    PostsAttribute data = 1;
+}
+
+message AddPostsAttributeResponse {
+    Result result = 1;
+    PostsAttribute data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdatePostsAttributeRequest {
+    PostsAttribute data = 1;
+}
+
+message UpdatePostsAttributeResponse {
+    Result result = 1;
+    PostsAttribute data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeletePostsAttributeRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeletePostsAttributeResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: posts_comments
+message PostsComments {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] author_id                                      bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 author_id = 2 [(gogoproto.customname) = 'AuthorID', (gogoproto.moretags) = 'gorm:\"column:author_id;type:bigint;\" json:\"author_id\" xml:\"author_id\" db:\"author_id\"'];
+    // Column: [ 2] content                                        varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
+    string content = 3 [(gogoproto.customname) = 'Content', (gogoproto.moretags) = 'gorm:\"column:content;type:varchar;size:255;\" json:\"content\" xml:\"content\" db:\"content\"'];
+    // Column: [ 3] parent_id                                      bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: [0]
+    int64 parent_id = 4 [(gogoproto.customname) = 'ParentID', (gogoproto.moretags) = 'gorm:\"column:parent_id;type:bigint;default:0;\" json:\"parent_id\" xml:\"parent_id\" db:\"parent_id\"'];
+    // Column: [ 4] status                                         int                  null: false  primary: false  isArray: false  auto: false  col: int             len: -1      default: [0]
+    int32 status = 5 [(gogoproto.customname) = 'Status', (gogoproto.moretags) = 'gorm:\"column:status;type:int;default:0;\" json:\"status\" xml:\"status\" db:\"status\"'];
+    // Column: [ 5] posts_id                                       bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 posts_id = 6 [(gogoproto.customname) = 'PostsID', (gogoproto.moretags) = 'gorm:\"column:posts_id;type:bigint;\" json:\"posts_id\" xml:\"posts_id\" db:\"posts_id\"'];
+    // Column: [ 6] tree_path                                      varchar(128)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 128     default: []
+    string tree_path = 7 [(gogoproto.customname) = 'TreePath', (gogoproto.moretags) = 'gorm:\"column:tree_path;type:varchar;size:128;\" json:\"tree_path\" xml:\"tree_path\" db:\"tree_path\"'];
+    // Column: [ 7] create_time                                    datetime             null: true   primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 8 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+}
+
+
+message GetAllPostsCommentsRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllPostsCommentsResponse {
+    Result result = 1;
+    repeated PostsComments data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetPostsCommentsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetPostsCommentsResponse {
+    Result result = 1;
+    PostsComments data = 2;
+}
+message AddPostsCommentsRequest {
+    PostsComments data = 1;
+}
+
+message AddPostsCommentsResponse {
+    Result result = 1;
+    PostsComments data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdatePostsCommentsRequest {
+    PostsComments data = 1;
+}
+
+message UpdatePostsCommentsResponse {
+    Result result = 1;
+    PostsComments data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeletePostsCommentsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeletePostsCommentsResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: posts_tags
+message PostsTags {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] tags_id                                        bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 tags_id = 2 [(gogoproto.customname) = 'TagsID', (gogoproto.moretags) = 'gorm:\"column:tags_id;type:bigint;\" json:\"tags_id\" xml:\"tags_id\" db:\"tags_id\"'];
+    // Column: [ 2] posts_id                                       bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 posts_id = 3 [(gogoproto.customname) = 'PostsID', (gogoproto.moretags) = 'gorm:\"column:posts_id;type:bigint;\" json:\"posts_id\" xml:\"posts_id\" db:\"posts_id\"'];
+    // Column: [ 3] sort                                           smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 sort = 4 [(gogoproto.customname) = 'Sort', (gogoproto.moretags) = 'gorm:\"column:sort;type:smallint;default:0;\" json:\"sort\" xml:\"sort\" db:\"sort\"'];
+    // Column: [ 4] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 5 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+    // Column: [ 5] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp update_time = 6 [(gogoproto.customname) = 'UpdateTime', (gogoproto.moretags) = 'gorm:\"column:update_time;type:datetime;\" json:\"update_time\" xml:\"update_time\" db:\"update_time\"'];
+}
+
+
+message GetAllPostsTagsRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllPostsTagsResponse {
+    Result result = 1;
+    repeated PostsTags data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetPostsTagsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetPostsTagsResponse {
+    Result result = 1;
+    PostsTags data = 2;
+}
+message AddPostsTagsRequest {
+    PostsTags data = 1;
+}
+
+message AddPostsTagsResponse {
+    Result result = 1;
+    PostsTags data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdatePostsTagsRequest {
+    PostsTags data = 1;
+}
+
+message UpdatePostsTagsResponse {
+    Result result = 1;
+    PostsTags data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeletePostsTagsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeletePostsTagsResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+// table: tags
+message Tags {
+    option (gogoproto.goproto_unrecognized) = false;
+    option (gogoproto.goproto_unkeyed) = false;
+    option (gogoproto.goproto_sizecache) = false;
+
+
+    // Column: [ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
+    int64 id = 1 [(gogoproto.customname) = 'ID', (gogoproto.moretags) = 'gorm:\"primary_key;AUTO_INCREMENT;column:id;type:bigint;\" json:\"id\" xml:\"id\" db:\"id\"'];
+    // Column: [ 1] name                                           varchar(32)          null: false  primary: false  isArray: false  auto: false  col: varchar         len: 32      default: []
+    string name = 2 [(gogoproto.customname) = 'Name', (gogoproto.moretags) = 'gorm:\"column:name;type:varchar;size:32;\" json:\"name\" xml:\"name\" db:\"name\"'];
+    // Column: [ 2] sort                                           smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
+    int32 sort = 3 [(gogoproto.customname) = 'Sort', (gogoproto.moretags) = 'gorm:\"column:sort;type:smallint;default:0;\" json:\"sort\" xml:\"sort\" db:\"sort\"'];
+    // Column: [ 3] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp create_time = 4 [(gogoproto.customname) = 'CreateTime', (gogoproto.moretags) = 'gorm:\"column:create_time;type:datetime;\" json:\"create_time\" xml:\"create_time\" db:\"create_time\"'];
+    // Column: [ 4] create_by                                      bigint               null: true   primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 create_by = 5 [(gogoproto.customname) = 'CreateBy', (gogoproto.moretags) = 'gorm:\"column:create_by;type:bigint;\" json:\"create_by\" xml:\"create_by\" db:\"create_by\"'];
+    // Column: [ 5] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
+    google.protobuf.Timestamp update_time = 6 [(gogoproto.customname) = 'UpdateTime', (gogoproto.moretags) = 'gorm:\"column:update_time;type:datetime;\" json:\"update_time\" xml:\"update_time\" db:\"update_time\"'];
+    // Column: [ 6] update_by                                      bigint               null: true   primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
+    int64 update_by = 7 [(gogoproto.customname) = 'UpdateBy', (gogoproto.moretags) = 'gorm:\"column:update_by;type:bigint;\" json:\"update_by\" xml:\"update_by\" db:\"update_by\"'];
+}
+
+
+message GetAllTagsRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+    string order = 3;
+}
+
+message GetAllTagsResponse {
+    Result result = 1;
+    repeated Tags data = 2;
+    int64 page = 3;
+    int64 page_size = 4;
+    int64 total_records = 5;
+}
+
+
+message GetTagsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message GetTagsResponse {
+    Result result = 1;
+    Tags data = 2;
+}
+message AddTagsRequest {
+    Tags data = 1;
+}
+
+message AddTagsResponse {
+    Result result = 1;
+    Tags data = 2;
+    int64 rowsAffected = 3;
+}
+
+message UpdateTagsRequest {
+    Tags data = 1;
+}
+
+message UpdateTagsResponse {
+    Result result = 1;
+    Tags data = 2;
+    int64 rowsAffected = 3;
+}
+
+message DeleteTagsRequest {
+
+    int64 id = 1 [(gogoproto.customname) = "ID"];
+}
+
+message DeleteTagsResponse {
+    Result result = 1;
+    int64 rows_affected = 2;
+}
+
+
+
+
+
+
+/*
+
+   "Config"               [*dbmeta.Config] &dbmeta.Config{SQLType:"mysql", SQLConnStr:"root:123456@tcp(closetool.site:3306)/test?charset=utf8&parseTime=True&loc=Local", SQLDatabase:"test", Module:"github.com/closetool/blog/services/menuservice/models", ModelPackageName:"model", ModelFQPN:"github.com/closetool/blog/services/menuservice/models/model", AddJSONAnnotation:true, AddGormAnnotation:true, AddProtobufAnnotation:true, AddXMLAnnotation:false, AddDBAnnotation:false, UseGureguTypes:true, JSONNameFormat:"lower-camel", XMLNameFormat:"snake", ProtobufNameFormat:"lower-camel", DaoPackageName:"dao", DaoFQPN:"github.com/closetool/blog/services/menuservice/models/dao", APIPackageName:"api", APIFQPN:"github.com/closetool/blog/services/menuservice/models/api", GrpcPackageName:"grpc", GrpcFQPN:"github.com/closetool/blog/services/menuservice/models/grpc", Swagger:(*dbmeta.SwaggerInfoDetails)(0xc0000d45a0), ServerPort:8080, ServerHost:"localhost", ServerScheme:"http", ServerListen:":8080", Verbose:false, OutDir:"./models", Overwrite:true, LineEndingCRLF:false, CmdLine:"gen --sqltype=mysql --connstr root:123456@tcp(closetool.site:3306)/test?charset=utf8&parseTime=True&loc=Local --database test --json --gorm --guregu --rest --out ./models --module github.com/closetool/blog/services/menuservice/models --json-fmt=lower-camel --protobuf --proto-fmt=lower-camel --generate-dao --overwrite", CmdLineWrapped:"gen \\\n    --sqltype=mysql \\\n    --connstr \\\n    root:123456@tcp(closetool.site:3306)/test?charset=utf8&parseTime=True&loc=Local \\\n    --database \\\n    test \\\n    --json \\\n    --gorm \\\n    --guregu \\\n    --rest \\\n    --out \\\n    ./models \\\n    --module \\\n    github.com/closetool/blog/services/menuservice/models \\\n    --json-fmt=lower-camel \\\n    --protobuf \\\n    --proto-fmt=lower-camel \\\n    --generate-dao \\\n    --overwrite", CmdLineArgs:[]string{"gen", "--sqltype=mysql", "--connstr", "root:123456@tcp(closetool.site:3306)/test?charset=utf8&parseTime=True&loc=Local", "--database", "test", "--json", "--gorm", "--guregu", "--rest", "--out", "./models", "--module", "github.com/closetool/blog/services/menuservice/models", "--json-fmt=lower-camel", "--protobuf", "--proto-fmt=lower-camel", "--generate-dao", "--overwrite"}, FileNamingTemplate:"{{.}}", ModelNamingTemplate:"{{FmtFieldName .}}", FieldNamingTemplate:"{{FmtFieldName (stringifyFirstChar .) }}", ContextMap:map[string]interface {}{"tableInfos":map[string]*dbmeta.ModelInfo{"auth_token":(*dbmeta.ModelInfo)(0xc000090f00), "auth_user":(*dbmeta.ModelInfo)(0xc000340be0), "auth_user_log":(*dbmeta.ModelInfo)(0xc00034cb40), "auth_user_social":(*dbmeta.ModelInfo)(0xc0003594a0), "black_list":(*dbmeta.ModelInfo)(0xc0003708c0), "category":(*dbmeta.ModelInfo)(0xc000371cc0), "category_tags":(*dbmeta.ModelInfo)(0xc000386aa0), "config":(*dbmeta.ModelInfo)(0xc000387360), "friendship_link":(*dbmeta.ModelInfo)(0xc00039a500), "menu":(*dbmeta.ModelInfo)(0xc00039b2c0), "posts":(*dbmeta.ModelInfo)(0xc0003a97c0), "posts_attribute":(*dbmeta.ModelInfo)(0xc0003c21e0), "posts_comments":(*dbmeta.ModelInfo)(0xc0003c25a0), "posts_tags":(*dbmeta.ModelInfo)(0xc0003c35e0), "tags":(*dbmeta.ModelInfo)(0xc0003c3e00)}}, TemplateLoader:(dbmeta.TemplateLoader)(0x8e2820), TableInfos:map[string]*dbmeta.ModelInfo{"auth_token":(*dbmeta.ModelInfo)(0xc000090f00), "auth_user":(*dbmeta.ModelInfo)(0xc000340be0), "auth_user_log":(*dbmeta.ModelInfo)(0xc00034cb40), "auth_user_social":(*dbmeta.ModelInfo)(0xc0003594a0), "black_list":(*dbmeta.ModelInfo)(0xc0003708c0), "category":(*dbmeta.ModelInfo)(0xc000371cc0), "category_tags":(*dbmeta.ModelInfo)(0xc000386aa0), "config":(*dbmeta.ModelInfo)(0xc000387360), "friendship_link":(*dbmeta.ModelInfo)(0xc00039a500), "menu":(*dbmeta.ModelInfo)(0xc00039b2c0), "posts":(*dbmeta.ModelInfo)(0xc0003a97c0), "posts_attribute":(*dbmeta.ModelInfo)(0xc0003c21e0), "posts_comments":(*dbmeta.ModelInfo)(0xc0003c25a0), "posts_tags":(*dbmeta.ModelInfo)(0xc0003c35e0), "tags":(*dbmeta.ModelInfo)(0xc0003c3e00)}}
+   "DatabaseName"         [string] "test"
+   "Dir"                  [string] "models"
+   "File"                 [string] "models/test.proto"
+   "Parent"               [string] "models"
+   "SwaggerInfo"          [*dbmeta.SwaggerInfoDetails] &dbmeta.SwaggerInfoDetails{Version:"1.0", Host:"localhost:8080", BasePath:"/", Title:"Sample CRUD api for test db", Description:"Sample CRUD api for test db", TOS:"", ContactName:"Me", ContactURL:"http://me.com/terms.html", ContactEmail:"me@me.com"}
+   "apiFQPN"              [string] "github.com/closetool/blog/services/menuservice/models/api"
+   "apiPackageName"       [string] "api"
+   "daoFQPN"              [string] "github.com/closetool/blog/services/menuservice/models/dao"
+   "daoPackageName"       [string] "dao"
+   "modelFQPN"            [string] "github.com/closetool/blog/services/menuservice/models/model"
+   "modelPackageName"     [string] "model"
+   "module"               [string] "github.com/closetool/blog/services/menuservice/models"
+   "outDir"               [string] "./models"
+   "serverHost"           [string] "localhost"
+   "serverListen"         [string] ":8080"
+   "serverPort"           [int] 8080
+   "serverScheme"         [string] "http"
+   "sqlConnStr"           [string] "root:123456@tcp(closetool.site:3306)/test?charset=utf8&parseTime=True&loc=Local"
+   "sqlType"              [string] "mysql"
+   "tableInfos"           [map[string]*dbmeta.ModelInfo] map[string]*dbmeta.ModelInfo{"auth_token":(*dbmeta.ModelInfo)(0xc000090f00), "auth_user":(*dbmeta.ModelInfo)(0xc000340be0), "auth_user_log":(*dbmeta.ModelInfo)(0xc00034cb40), "auth_user_social":(*dbmeta.ModelInfo)(0xc0003594a0), "black_list":(*dbmeta.ModelInfo)(0xc0003708c0), "category":(*dbmeta.ModelInfo)(0xc000371cc0), "category_tags":(*dbmeta.ModelInfo)(0xc000386aa0), "config":(*dbmeta.ModelInfo)(0xc000387360), "friendship_link":(*dbmeta.ModelInfo)(0xc00039a500), "menu":(*dbmeta.ModelInfo)(0xc00039b2c0), "posts":(*dbmeta.ModelInfo)(0xc0003a97c0), "posts_attribute":(*dbmeta.ModelInfo)(0xc0003c21e0), "posts_comments":(*dbmeta.ModelInfo)(0xc0003c25a0), "posts_tags":(*dbmeta.ModelInfo)(0xc0003c35e0), "tags":(*dbmeta.ModelInfo)(0xc0003c3e00)}
+
+ */

@@ -1,4 +1,4 @@
-FROM nginx
+FROM nginx:1.11.0
 
 COPY ./proxy.conf /etc/nginx/conf.d/
 

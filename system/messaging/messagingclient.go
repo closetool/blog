@@ -2,6 +2,7 @@ package messaging
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/closetool/blog/utils/collectionsutils"
 	"github.com/sirupsen/logrus"
@@ -9,6 +10,7 @@ import (
 )
 
 var Client IMessagingClient
+var TimeEX error = fmt.Errorf("time exceed")
 
 // Defines our interface for connecting and consuming messages.
 type IMessagingClient interface {
@@ -115,7 +117,7 @@ func (m *MessagingClient) PublishOnQueue(body []byte, queueName string) error {
 			ContentType: "application/json",
 			Body:        body, // Our JSON body as []byte
 		})
-	logrus.Debugf("A message was sent to queue %v: %v", queueName, body)
+	logrus.Debugf("A message was sent to queue %v: %v", queueName, string(body))
 	return err
 }
 
@@ -124,6 +126,10 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 		panic("Tried to send message before connection was initialized. Don't do that.")
 	}
 	ch, err := m.conn.Channel() // Get a channel from the connection
+	if err != nil {
+		logrus.Errorf("amqp: open channel failed: %v", err)
+		return nil, err
+	}
 	defer ch.Close()
 
 	queue, err := ch.QueueDeclare( // Declare a queue that will be created if not exists with some args
@@ -135,6 +141,11 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 		nil,       // arguments
 	)
 
+	if err != nil {
+		logrus.Errorf("amqp: declare queue failed: %v", err)
+		return nil, err
+	}
+
 	replyQueue, err := ch.QueueDeclare(
 		"",
 		false,
@@ -143,6 +154,11 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 		false,
 		nil,
 	)
+
+	if err != nil {
+		logrus.Errorf("amqp: declare queue failed: %v", err)
+		return nil, err
+	}
 
 	msgs, err := ch.Consume(
 		replyQueue.Name, // queue
@@ -154,6 +170,10 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 		nil,             // args
 	)
 
+	if err != nil {
+		logrus.Errorf("amqp: declare consume failed: %v", err)
+		return nil, err
+	}
 	corrId := string(collectionsutils.RandomString(32))
 
 	// Publishes a message onto the queue.
@@ -167,19 +187,29 @@ func (m *MessagingClient) PublishOnQueueWaitReply(body []byte, queueName string)
 			CorrelationId: corrId,
 			Body:          body, // Our JSON body as []byte
 			ReplyTo:       replyQueue.Name,
-		})
+		},
+	)
+
+	if err != nil {
+		logrus.Errorf("amqp: publish message failed: %v", err)
+		return nil, err
+	}
 
 	logrus.Debugf("A message was sent to queue %v: %v", queueName, string(body))
 
-	var res []byte
-	for d := range msgs {
-		if corrId == d.CorrelationId {
-			res = d.Body
-			return res, err
+	tmr := time.NewTimer(3 * time.Second)
+
+	for {
+		select {
+		case d := <-msgs:
+			if corrId == d.CorrelationId {
+				logrus.Debugln(string(d.Body))
+				return d.Body, nil
+			}
+		case <-tmr.C:
+			return nil, TimeEX
 		}
 	}
-
-	return res, err
 }
 
 func (m *MessagingClient) Subscribe(exchangeName string, exchangeType string, consumerName string, handlerFunc func(amqp.Delivery)) error {

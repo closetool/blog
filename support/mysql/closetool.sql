@@ -229,13 +229,13 @@ INSERT INTO `closetool_category_tags` VALUES (1,1,1,0,'2020-09-10 16:42:14','202
 UNLOCK TABLES;
 
 --
--- Table structure for table `closetool_config`
+-- Table structure for table `config`
 --
 
-DROP TABLE IF EXISTS `closetool_config`;
+DROP TABLE IF EXISTS `config`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8 ;
-CREATE TABLE `closetool_config` (
+CREATE TABLE `config` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `config_key` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置key',
   `config_value` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置值',
@@ -246,13 +246,13 @@ CREATE TABLE `closetool_config` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `closetool_config`
+-- Dumping data for table `config`
 --
 
-LOCK TABLES `closetool_config` WRITE;
-/*!40000 ALTER TABLE `closetool_config` DISABLE KEYS */;
-INSERT INTO `closetool_config` VALUES (1,'name','closestool',0),(2,'domain','http://127.0.0.1',0),(3,'keywords','java',0),(4,'description','java',0),(5,'metas','1.1.1',0),(6,'copyright','Copyright @ closetool',0),(7,'icp','xxxx',0),(8,'qiniu_access_key','',1),(9,'qiniu_secret_key','',1),(10,'qiniu_bucket','',1),(11,'qiniu_image_domain','',1),(12,'cloud_music_id','165447515',2),(14,'store_type','default',3),(15,'aliyun_oss_access_key','',4),(16,'aliyun_oss_secret_key','',4),(17,'aliyun_oss_bucket','',4),(18,'aliyun_oss_endpoint','',4),(19,'aliyun_oss_path','',4),(20,'aliyun_oss_image_domain','',4),(21,'cos_access_key','',5),(22,'cos_secret_key','',5),(23,'cos_bucket','',5),(24,'cos_region','',5),(25,'cos_image_domain','',5),(26,'cos_path','',5),(27,'default_path','',6),(28,'default_image_domain','http://127.0.0.1:9000/api/blog/',6);
-/*!40000 ALTER TABLE `closetool_config` ENABLE KEYS */;
+LOCK TABLES `config` WRITE;
+/*!40000 ALTER TABLE `config` DISABLE KEYS */;
+INSERT INTO `config` VALUES (1,'name','closestool',0),(2,'domain','http://127.0.0.1',0),(3,'keywords','java',0),(4,'description','java',0),(5,'metas','1.1.1',0),(6,'copyright','Copyright @ closetool',0),(7,'icp','xxxx',0),(8,'qiniu_access_key','',1),(9,'qiniu_secret_key','',1),(10,'qiniu_bucket','',1),(11,'qiniu_image_domain','',1),(12,'cloud_music_id','165447515',2),(14,'store_type','default',3),(15,'aliyun_oss_access_key','',4),(16,'aliyun_oss_secret_key','',4),(17,'aliyun_oss_bucket','',4),(18,'aliyun_oss_endpoint','',4),(19,'aliyun_oss_path','',4),(20,'aliyun_oss_image_domain','',4),(21,'cos_access_key','',5),(22,'cos_secret_key','',5),(23,'cos_bucket','',5),(24,'cos_region','',5),(25,'cos_image_domain','',5),(26,'cos_path','',5),(27,'default_path','',6),(28,'default_image_domain','http://127.0.0.1:9000/api/blog/',6);
+/*!40000 ALTER TABLE `config` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

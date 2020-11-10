@@ -9,6 +9,7 @@ import (
 func InitServer() *gin.Engine {
 	r := gin.New()
 	r.Use(middlewares.LogToFile())
+	r.Use(gin.RecoveryWithWriter(Dst))
 	r.Use(middlewares.Recover())
 
 	logrus.Infof("server initialized")

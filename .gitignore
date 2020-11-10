@@ -5,4 +5,6 @@ build/
 *.log
 *-linux-amd64
 logs
-services/*/config.yml
+services/temp/
+server.jks
+config.yml

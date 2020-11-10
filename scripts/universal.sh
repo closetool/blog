@@ -4,7 +4,8 @@ home=`pwd`
 
 for i in $@
 do
-	servicename=$i
+	servicename=${i%:*}
+	port=${i#*:}
 
 	if [ -z $servicename ] 
 	then 
@@ -26,12 +27,15 @@ do
 
 	docker build -t closetool/"$servicename" ./
 
-#echo "pushing images to aliyun"
-#docker tag closetool/"$servicename" "$ALIYUN"closetool/"$servicename"
-#docker push "$ALIYUN"closetool/"$servicename"
+	#echo "pushing images to aliyun"
+	#docker tag closetool/"$servicename" "$ALIYUN"closetool/"$servicename"
+	#docker push "$ALIYUN"closetool/"$servicename"
 
-docker service rm "$servicename" 
-docker service create --network my_network --replicas 1 --name "$servicename" -p 2600:2600 "$ALIYUN"closetool/"$servicename"
-#rm config.yml
-cd $home
+		docker service rm "$servicename" 
+	docker service create --network my_network --replicas 1 --name "$servicename" -p $port:$port "$ALIYUN"closetool/"$servicename"
+	rm config.yml
+	cd $home
 done
+
+cd ../
+./nginx.sh
