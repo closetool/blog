@@ -20,6 +20,7 @@ const (
 	ImportFileError
 	DatabaseSqlParseError
 	LoginOverTime
+	DataExist
 )
 
 var Errors = map[int]string{
@@ -42,4 +43,5 @@ var Errors = map[int]string{
 	ImportFileError:       "文件导入失败",
 	DatabaseSqlParseError: "数据库解析异常",
 	LoginOverTime:         "登录超时",
+	DataExist:             "数据已存在",
 }

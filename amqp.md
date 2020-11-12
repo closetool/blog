@@ -54,6 +54,11 @@
 > request: 无参数
 > response: 返回以category_id为见，posts数为值的数组
 
+* GetCategoryIDAndCountInUse
+> queue name: posts.getCategoryIDAndCountInUse
+> request: 无参数
+> response: 返回以category_id为见，posts数为值的数组，posts正在使用
+
 ## LOGS
 
 * SaveLogs

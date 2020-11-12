@@ -56,3 +56,27 @@ func LinkCond(l *model.FriendshipLink) func(*gorm.DB) *gorm.DB {
 		return db
 	}
 }
+
+func CategoryCond(c *model.Category) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if c.BaseVO != nil && c.Keywords != "" {
+			db.Where("name like ?", surround(c.Keywords))
+		}
+		if c.Name != "" {
+			db.Where("name = ?", c.Name)
+		}
+		return db
+	}
+}
+
+func TagsCond(t *model.Tags) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if t.BaseVO != nil && t.Keywords != "" {
+			db.Where("name like ?", surround(t.Keywords))
+		}
+		if t.Name != "" {
+			db.Where("name = ?", t.Name)
+		}
+		return db
+	}
+}

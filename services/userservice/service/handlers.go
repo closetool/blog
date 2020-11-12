@@ -37,6 +37,9 @@ func Health(c *gin.Context) {
 func getUserInfo(c *gin.Context) {
 	value, _ := c.Get("session")
 	user, _ := value.(*po.AuthUser)
+	if _, err := db.DB.ID(user.Id).Get(&user); err != nil {
+		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
+	}
 	logrus.Debugf("user = %#v", user)
 	userVO := &vo.AuthUser{}
 	userVO.Status = user.Status

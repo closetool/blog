@@ -44,10 +44,10 @@ func GetSession(c *gin.Context) bool {
 	//	return false
 	//}
 
-	user := &po.AuthUser{
+	user := po.AuthUser{
 		Id: claim.Id,
 	}
-	ok, err = db.DB.Get(user)
+	ok, err = db.DB.Get(&user)
 	if !ok || err != nil {
 		return false
 	}

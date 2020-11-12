@@ -154,9 +154,9 @@ func (c *Config) TableName() string {
 }
 
 // BeforeSave invoked before saving, return an error if field is not populated.
-func (c *Config) BeforeSave() error {
-	return nil
-}
+//func (c *Config) BeforeSave() error {
+//	return nil
+//}
 
 // Prepare invoked before saving, can be used to populate fields etc.
 func (c *Config) Prepare() {

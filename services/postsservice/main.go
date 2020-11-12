@@ -46,6 +46,7 @@ func main() {
 
 	amqp.GetTagsIDAndCount()
 	amqp.GetCategoryIDAndCount()
+	amqp.DeletePostsTagsById()
 
 	exit.Listen(func() {})
 

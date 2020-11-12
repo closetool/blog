@@ -2,5 +2,5 @@
 #profile: prod
 #branch: blog
 config_server_url: http://closetool.top:8888
-profile: prod 
+profile: test 
 branch: blog
