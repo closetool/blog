@@ -8,6 +8,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
+	"gorm.io/gorm"
 )
 
 func GetCategoryNameById() {
@@ -17,9 +18,14 @@ func GetCategoryNameById() {
 
 		categories := make([]model.Category, 0)
 
-		if err := db.Gorm.Where("id in ?", ids).Find(&categories); err != nil {
-			logrus.Debugln(err)
-			return reply.ErrorBytes(reply.DatabaseSqlParseError)
+		if err := db.Gorm.Where("id in ?", ids).Find(&categories).Error; err != nil {
+			switch err {
+			case gorm.ErrRecordNotFound:
+				return reply.ModelBytes([]interface{}{})
+			default:
+				logrus.Debugln(err)
+				return reply.ErrorBytes(reply.DatabaseSqlParseError)
+			}
 		}
 		result := make(map[int64]string)
 		for _, category := range categories {

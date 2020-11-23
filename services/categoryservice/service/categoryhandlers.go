@@ -21,6 +21,7 @@ import (
 func health(c *gin.Context) {
 	if db.Gorm != nil {
 		c.JSON(http.StatusOK, map[string]bool{"health": true})
+		return
 	}
 	c.JSON(http.StatusOK, map[string]bool{"health": false})
 }
@@ -29,7 +30,7 @@ func saveCategory(c *gin.Context, tx *gorm.DB) {
 	category := model.Category{}
 	err := c.ShouldBindJSON(&category)
 	if err != nil {
-		logrus.Debugln(err)
+		logrus.Errorf("binding param failed: %v", err)
 		panic(reply.ParamError)
 	}
 
@@ -37,12 +38,12 @@ func saveCategory(c *gin.Context, tx *gorm.DB) {
 
 	if tx.Where("name", category.Name).First(&category).RowsAffected == 0 {
 		if err := tx.Create(&category).Error; err != nil {
-			logrus.Debugln(err)
+			logrus.Errorf("save category failed: %v", err)
 			panic(reply.DatabaseSqlParseError)
 		}
 	} else {
 		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&category).Error; err != nil {
-			logrus.Debugln(err)
+			logrus.Errorf("update category failed: %v", err)
 			panic(reply.DatabaseSqlParseError)
 		}
 	}
@@ -61,8 +62,12 @@ func statisticsList(c *gin.Context) {
 
 	categories := make([]model.Category, 0)
 	if err := db.Gorm.Order("id").Find(&categories).Error; err != nil {
-		logrus.Debugln(err)
-		panic(reply.DatabaseSqlParseError)
+		switch err {
+		case gorm.ErrRecordNotFound:
+		default:
+			logrus.Errorf("get categories failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
 	}
 
 	for i, category := range categories {
@@ -76,11 +81,15 @@ func updateCategory(c *gin.Context, tx *gorm.DB) {
 	category := model.Category{}
 	err := c.ShouldBindJSON(&category)
 	if err != nil || category.ID == 0 {
-		logrus.Debugln(err)
+		logrus.Errorf("binding param failed: %v", err)
 		panic(reply.ParamError)
 	}
 
 	logrus.Debugf("%#v", category)
+	temp := model.Category{}
+	if tx.First(&temp, category.ID).RowsAffected == 0 {
+		panic(reply.DataNoExist)
+	}
 
 	if err := tx.Model(&category).Updates(&category).Error; err != nil {
 		logrus.Debugln(err)
@@ -100,20 +109,30 @@ func updateCategory(c *gin.Context, tx *gorm.DB) {
 func getCategoryTags(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
+		logrus.Errorf("binding param failed: %v", err)
 		panic(reply.ParamError)
 	}
 
 	category := model.Category{}
 	if err := db.Gorm.Preload(clause.Associations).Where("id = ?", id).First(&category).Error; err != nil {
-		logrus.Debugln(err)
-		panic(reply.DatabaseSqlParseError)
+		switch err {
+		case gorm.ErrRecordNotFound:
+			panic(reply.DataNoExist)
+		default:
+			logrus.Errorf("get category failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
 	}
 	reply.CreateJSONModel(c, category)
 }
 
 func getCategoryTagsList(c *gin.Context) {
 	category := model.Category{}
-	c.ShouldBindQuery(&category)
+	err := c.ShouldBindQuery(&category)
+	if err != nil {
+		logrus.Errorf("binding param failed: %v", err)
+		panic(reply.ParamError)
+	}
 	page := pageutils.CheckAndInitPage(category.BaseVO)
 	logrus.Debugln(page)
 
@@ -156,6 +175,7 @@ func getCategoryList(c *gin.Context) {
 func deleteCategory(c *gin.Context, tx *gorm.DB) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
+		logrus.Errorf("binding param failed: %v", err)
 		panic(reply.ParamError)
 	}
 

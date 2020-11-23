@@ -9,6 +9,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
+	"gorm.io/gorm"
 )
 
 func GetTagsByName() {
@@ -19,7 +20,7 @@ func GetTagsByName() {
 
 		count := int64(0)
 
-		if err := db.Gorm.Where("name = ?", tagName).Count(&count).First(&tag).Error; err != nil {
+		if err := db.Gorm.Where("name = ?", tagName).Count(&count).First(&tag).Error; err != nil && err != gorm.ErrRecordNotFound {
 			logrus.Errorf("select from db failed: %v", err)
 			return reply.ErrorBytes(reply.DatabaseSqlParseError)
 		}
@@ -44,8 +45,9 @@ func GetTagsByIds() {
 
 		tags := make([]model.Tags, 0)
 
-		if err := db.Gorm.Where("id = ?", ids).Find(&tags).Error; err != nil {
+		if err := db.Gorm.Where("id = ?", ids).Find(&tags).Error; err != nil && err != gorm.ErrRecordNotFound {
 			logrus.Errorf("select from db failed: %v", err)
+			return reply.ErrorBytes(reply.Error)
 		}
 		return reply.ModelsBytes(model.Tags2Interfaces(tags))
 	})
@@ -63,9 +65,11 @@ func AddTags() {
 		tx := db.Gorm.Begin()
 		for _, tag := range tags {
 			if err := tx.Where("name = ?", tag.Name).FirstOrCreate(&tag).Error; err != nil {
-				logrus.Errorf("could not create tag: %v", err)
-				tx.Rollback()
-				return reply.ErrorBytes(reply.Error)
+				if err != gorm.ErrRecordNotFound {
+					logrus.Errorf("could not create tag: %v", err)
+					tx.Rollback()
+					return reply.ErrorBytes(reply.Error)
+				}
 			}
 			ids = append(ids, tag.ID)
 		}

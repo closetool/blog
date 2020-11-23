@@ -11,6 +11,7 @@ import (
 	"github.com/closetool/blog/system/exit"
 	"github.com/closetool/blog/system/initial"
 	"github.com/closetool/blog/system/messaging"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/closetool/blog/utils/routeutils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -35,6 +36,8 @@ func main() {
 	db.DbInit(&po.Posts{}, &po.PostsTags{}, &po.PostsAttribute{}, &po.PostsComments{})
 	db.SyncTables(&po.Posts{}, &po.PostsTags{}, &po.PostsAttribute{}, &po.PostsComments{})
 
+	db.GormInit()
+	db.Migrate(&model.Posts{}, &model.PostsTags{}, &model.PostsAttribute{}, &model.PostsComments{})
 	r := initial.InitServer()
 	//TODO
 	routeutils.RegisterRoute(service.PostsRoutes, r.Group("posts"))

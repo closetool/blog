@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/closetool/blog/system/models"
 	"github.com/guregu/null"
 	uuid "github.com/satori/go.uuid"
 )
@@ -73,15 +74,61 @@ type Posts struct {
 	//[11] weight                                         int                  null: false  primary: false  isArray: false  auto: false  col: int             len: -1      default: [0]
 	Weight int32 `gorm:"column:weight;type:int;default:0;" json:"weight,omitempty" form:"weight"` // 文章权重
 	//[12] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	CreateTime time.Time `gorm:"column:create_time;type:datetime;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"` // 创建时间
+	CreateTime int64 `gorm:"column:create_time;type:datetime;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"` // 创建时间
 	//[13] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	UpdateTime time.Time `gorm:"column:update_time;type:datetime;autoUpdateTime:milli;" json:"updateTime,omitempty" form:"updateTime"` // 更新时间
+	UpdateTime int64 `gorm:"column:update_time;type:datetime;autoUpdateTime:milli;" json:"updateTime,omitempty" form:"updateTime"` // 更新时间
 
 	PostsAttribute PostsAttribute `gorm:"foreignKey:PostsID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	PostsTags []PostsTags `gorm:"foreignKey:PostsID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	PostsComments []PostsComments `gorm:"foreignKey:PostsID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+
+	*models.BaseVO `gorm:"-"`
+
+	Content string `gorm:"-" json:"content" form:"content"`
+
+	CommentsTotal int64 `gorm:"-" json:"commentsTotal" form:"commentsTotal"`
+
+	ViewsTotal int64 `gorm:"-" json:"viewsTotal" form:"viewsTotal"`
+
+	DraftTotal int64 `gorm:"-" json:"draftTotal" form:"draftTotal"`
+
+	SyncTotal int64 `gorm:"-" json:"syncTotal" form:"syncTotal"`
+
+	TodayPublishTotal int64 `gorm:"-" json:"todayPublishTotal" form:"todayPublishTotal"`
+
+	TagList []string `gorm:"-" json:"tagList" form:"tagList"`
+
+	SocialID string `gorm:"-" json:"socialId" form:"socialId"`
+
+	Year int64 `gorm:"-" json:"year" form:"year"`
+
+	TagsName string `gorm:"-" json:"tagsName" form:"tagsName"`
+
+	IsWeight int64 `gorm:"-" json:"isWeight" form:"isWeight"`
+
+	CategoryName string `gorm:"-" json:"categoryName" form:"categoryName"`
+
+	Author string `gorm:"-" json:"author" form:"author"`
+
+	ArchivePosts []Posts `gorm:"-" json:"archivePosts" form:"archivePosts"`
+
+	PostsTagsID int64 `gorm:"-" json:"postsTagsId" form:"postsTagsId"`
+
+	TagsList []Tags `gorm:"-" json:"tagsList" form:"tagsList"`
+
+	ArchiveDate *models.JSONTime `gorm:"-" json:"archiveDate" form:"archiveDate"`
+
+	ArchiveTotal int64 `gorm:"-" json:"archiveTotal" form:"archiveTotal"`
+}
+
+func Posts2Interfaces(posts []Posts) []interface{} {
+	ints := make([]interface{}, len(posts))
+	for i, post := range posts {
+		ints[i] = post
+	}
+	return ints
 }
 
 var postsTableInfo = &TableInfo{

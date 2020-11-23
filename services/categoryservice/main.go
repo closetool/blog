@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/closetool/blog/services/categoryservice/models/po"
 	"github.com/closetool/blog/services/categoryservice/service"
 	"github.com/closetool/blog/services/categoryservice/service/amqp"
 	"github.com/closetool/blog/system/config"
@@ -32,9 +31,6 @@ func main() {
 	//viper.Set("log_level", )
 
 	initial.InitLog()
-
-	db.DbInit(&po.Category{}, &po.CategoryTags{}, &po.Tags{})
-	db.SyncTables(&po.Category{}, &po.CategoryTags{}, &po.Tags{})
 
 	db.GormInit()
 	db.Migrate(&model.CategoryTags{}, &model.Category{}, &model.Tags{})

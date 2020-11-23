@@ -8,3 +8,4 @@ logs
 services/temp/
 server.jks
 config.yml
+.vscode/

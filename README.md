@@ -34,44 +34,57 @@
 * 使用log_level修改日志输出级别(default:4 info)
 
 ## Music Service
+
 * 需要music_playlist_id(网易云歌单id)
 * 服务端口配置为2599
 
 ## User Service
+
 > * /social/v1/list \> /list/v1/social</br> 
 > * /social/v1/info \> /info/v1/social</br>
 > * /social/v1/socials \> /socials/v1/social
 > * /byteblogs/email/v1/send \> /auth/email/v1/send
 
 ## Category Service
+
 > * /comments/v1/get \> /get/v1/comments
 > * /category-tags/v1/list \> /list/v1/category-tags
 > * /category/v1/list \> /list/v1/category
 > * /tags/v1/list \> /list/v1/tags
 
 ### category
+
 > * /category-tags/v1/list \> /list/v1/category-tags</br>
 > * /category/v1/list \> /list/v1/category
+
 ### tags
+
 > * /tags/v1/list \> /list/v1/tags
 
 ## Posts Service
+
 ### posts
+
 > * /posts/v1/list \> /list/v1/posts
 
 ### comments
+
 > * /comments/v1/get \> /get/v1/comments
 
 ## Menu Service
+
 > * /menu/v1/list \> /list/v1/menu
 
 ## Link Service
+
 > * /link/v1/list \> /list/v1/link
 
 ## FIXME
+
 * docker swarm中不同node之间的同一overlay网络中的容器无法互相访问，nginx代理只能使用公网
 * gin框架中不支持注册spring中的requestmapping，只能为路由多次注册不同方法
 * gin框架中/info和/:id路由冲突
 
 ## TODO
+
 * 使用gorm替换xorm
