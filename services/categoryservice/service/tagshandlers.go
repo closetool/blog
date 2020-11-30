@@ -1,178 +1,135 @@
 package service
 
 import (
+	"bytes"
 	"strconv"
 
-	"github.com/closetool/blog/services/categoryservice/models/po"
-	"github.com/closetool/blog/services/categoryservice/models/vo"
 	"github.com/closetool/blog/system/db"
+	"github.com/closetool/blog/system/messaging"
+	"github.com/closetool/blog/system/models/dao"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/closetool/blog/system/reply"
 	"github.com/closetool/blog/utils/pageutils"
 	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
-	"xorm.io/xorm"
+	"gorm.io/gorm"
 )
 
 func getTagsList(c *gin.Context) {
-	tagsVO := &vo.Tags{}
-	c.ShouldBindQuery(tagsVO)
-	logrus.Debugf("tagsVO = %#v", tagsVO)
-	tagsList := make([]interface{}, 0)
-	if tagsVO.BaseVO == nil || (tagsVO.Page == 0 && tagsVO.Size == 0) {
-		records := make([]*po.Tags, 0)
-		if err := db.DB.Find(&records); err != nil {
-			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-			return
-		}
-		for _, record := range records {
-			tagsList = append(tagsList, &vo.Tags{
-				Id:   record.Id,
-				Name: record.Name,
-			})
-		}
-		reply.CreateJSONModels(c, tagsList)
-		return
-	}
+	tag := model.Tags{}
+	c.ShouldBindQuery(&tag)
+	logrus.Debugf("tag = %#v", tag)
+	tags := make([]model.Tags, 0)
+	page := pageutils.CheckAndInitPage(tag.BaseVO)
 
-	session := db.DB.NewSession()
-	if tagsVO.Keywords != "" {
-		session = session.Where("name like ?", "%"+tagsVO.Keywords+"%")
+	if err := db.Gorm.Model(&tag).Scopes(dao.TagsCond(&tag)).Count(&page.Total).Scopes(dao.Paginate(page)).Find((&tags)).Error; err != nil {
+		logrus.Debugln(err)
+		panic(reply.DatabaseSqlParseError)
 	}
-	if tagsVO.Name != "" {
-		session = session.Where("name = ?", tagsVO.Name)
-	}
-
-	page := pageutils.CheckAndInitPage(tagsVO.BaseVO)
-	tagsPOs := make([]*po.Tags, 0)
-
-	var err error
-	if page.Total, err = session.Limit(pageutils.StartAndEnd(page)).FindAndCount(&tagsPOs); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-
-	tagsVOs := make([]interface{}, 0)
-	for _, tagsPO := range tagsPOs {
-		tagsVOs = append(tagsVOs, vo.Tags{
-			Name: tagsPO.Name,
-			Id:   tagsPO.Id,
-		})
-	}
-	reply.CreateJSONPaging(c, tagsVOs, page)
+	reply.CreateJSONPaging(c, model.Tags2Interfaces(tags), page)
 }
 
+//TODO: test
 func getTagsAndArticleQuantityList(c *gin.Context) {
-	records := make([]*po.Tags, 0)
-	if err := db.DB.Find(&records); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+	tags := []model.Tags{}
+	if err := db.Gorm.Find(&tags); err != nil {
+		logrus.Errorf("could not select tags from db: %v", tags)
+		panic(reply.DatabaseSqlParseError)
 	}
 
-	tagsVOList := make([]interface{}, 0)
-
-	for _, record := range records {
-		//TODO:修改为向postsservice，发送请求
-		res, err := db.DB.SQL(`SELECT Count(*) as total 
-		FROM closetool_posts_tags 
-		WHERE tags_id = ?`, record.Id).QueryInterface()
-		if err != nil {
-			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		}
-		total, ok := res[0]["total"].(int64)
-		logrus.Debugf("total is int64: %v", ok)
-		if !ok {
-			reply.CreateJSONError(c, reply.Error)
-			return
-		}
-		tagsVOList = append(tagsVOList, &vo.Tags{
-			Name:       record.Name,
-			Id:         record.Id,
-			PostsTotal: total,
-		})
+	IDAndCount := make(map[int64]int64)
+	rpl, err := messaging.Client.PublishOnQueueWaitReply([]byte{}, "posts.tags.getTagsIDAndCount")
+	if err != nil || !bytes.Contains(rpl, []byte("00000")) {
+		logrus.Errorf("can not get id mapped count: %v", err)
+		panic(reply.Error)
 	}
 
-	reply.CreateJSONModels(c, tagsVOList)
+	for i, tag := range tags {
+		tags[i].PostsTotal = IDAndCount[tag.ID]
+	}
+	reply.CreateJSONModels(c, model.Tags2Interfaces(tags))
 }
 
 func getTags(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return
+		panic(reply.ParamError)
 	}
 	logrus.Debugf("id = %v", id)
 
-	tagsPO := &po.Tags{}
-	if _, err := db.DB.ID(id).Get(tagsPO); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+	var tag *model.Tags
+	if tag, err = dao.GetTags(db.Gorm, id); err != nil {
+		logrus.Debugln(err)
+		switch err {
+		case dao.ErrNotFound:
+			panic(reply.DataNoExist)
+		default:
+			panic(reply.DatabaseSqlParseError)
+		}
 	}
-	tagsVO := vo.Tags{
-		Name: tagsPO.Name,
-		Id:   tagsPO.Id,
-	}
-	reply.CreateJSONModel(c, tagsVO)
+	reply.CreateJSONModel(c, tag)
 }
 
-func saveTags(c *gin.Context, session *xorm.Session) error {
-	tagsVO := &vo.Tags{}
-	err := c.ShouldBindJSON(tagsVO)
+func saveTags(c *gin.Context, tx *gorm.DB) {
+	tag := model.Tags{}
+	err := c.ShouldBindJSON(&tag)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
+		panic(reply.ParamError)
 	}
-
-	//session, ok := c.Get("session")
-	//if !ok {
-	//	reply.CreateJSONError(c, reply.AccountNotExist)
-	//}
-	//user, ok := session.(uservo.AuthUser)
-	//if !ok {
-	//	reply.CreateJSONError(c, reply.AccountNotExist)
-	//}
-
-	session.InsertOne(&po.Tags{
-		Name: tagsVO.Name,
-		//CreateBy: user.Id,
-		//UpdateBy: user.Id,
-	})
-	reply.CreateJSONsuccess(c)
-	return nil
-}
-
-func updateTags(c *gin.Context, session *xorm.Session) error {
-	tagsVO := &vo.Tags{}
-	err := c.ShouldBindJSON(tagsVO)
-	if err != nil || tagsVO.Id == 0 {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
-	}
-
-	if count, err := session.ID(tagsVO.Id).Cols("name").Update(&po.Tags{Name: tagsVO.Name}); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
-	} else if count == 0 {
-		reply.CreateJSONError(c, reply.DataNoExist)
-		return nil
+	count := int64(0)
+	tx.Model(&model.Tags{}).Where("name = ?", tag.Name).Count(&count)
+	if count == 0 {
+		if _, _, err := dao.AddTags(tx, &tag); err != nil {
+			logrus.Debugln(err)
+			panic(reply.DatabaseSqlParseError)
+		}
+	} else {
+		panic(reply.DataNoExist)
 	}
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
-func deleteTags(c *gin.Context, session *xorm.Session) error {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+func updateTags(c *gin.Context, tx *gorm.DB) {
+	tag := model.Tags{}
+	err := c.ShouldBindJSON(&tag)
+	if err != nil || tag.ID == 0 {
+		panic(reply.ParamError)
+	}
+
+	if _, _, err := dao.UpdateTags(tx, tag.ID, &tag); err != nil {
+		logrus.Debugln(err)
+		switch err {
+		case dao.ErrNotFound:
+			panic(reply.DataNoExist)
+		default:
+			panic(reply.DatabaseSqlParseError)
+		}
+	}
+	reply.CreateJSONsuccess(c)
+}
+
+//TODO:test
+func deleteTags(c *gin.Context, tx *gorm.DB) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
+		panic(reply.ParamError)
 	}
 	logrus.Debugf("id = %v", id)
 
-	session.ID(id).Delete(&po.Tags{})
-	session.Where("tags_id = ?", id).Delete(&po.CategoryTags{})
-	//TODO:向消息总线发送任务，请求postsservice删除相关poststags
-	//session.Where("tags_id = ?", id).Delete()
+	if _, err := dao.DeleteTags(tx, id); err != nil {
+		logrus.Debugln(err)
+		switch err {
+		case dao.ErrNotFound:
+			panic(reply.DataNoExist)
+		default:
+			panic(reply.DatabaseSqlParseError)
+		}
+	}
+	bts, _ := jsoniter.Marshal(map[string]int64{"id": id})
+	if err = messaging.Client.PublishOnQueue(bts, "posts.tags.deletePostsTagsById"); err != nil {
+		logrus.Errorf("could not delete poststags: %v", err)
+		panic(reply.Error)
+	}
 	reply.CreateJSONsuccess(c)
-	return nil
 }

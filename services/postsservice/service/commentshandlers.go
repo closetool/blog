@@ -4,328 +4,305 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
-	"time"
 
-	"github.com/closetool/blog/services/postsservice/models/po"
-	"github.com/closetool/blog/services/postsservice/models/vo"
-	uservo "github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/messaging"
-	"github.com/closetool/blog/system/models"
+	"github.com/closetool/blog/system/models/dao"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/closetool/blog/system/reply"
 	"github.com/closetool/blog/utils/pageutils"
 	"github.com/closetool/blog/utils/sessionutils"
 	"github.com/gin-gonic/gin"
+	"github.com/guregu/null"
 	jsoniter "github.com/json-iterator/go"
-	"xorm.io/xorm"
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
-func savePostsComments(c *gin.Context, session *xorm.Session) error {
+func savePostsComments(c *gin.Context, tx *gorm.DB) {
 	user, err := sessionutils.GetSession(c)
 	if err != nil {
-		reply.CreateJSONError(c, reply.AccountNotExist)
-		return err
+		logrus.Errorf("account have no privilege: %v", err)
+		panic(reply.AccessNoPrivilege)
 	}
 
-	postsCommentsVO := &vo.PostsComments{}
-	err = c.ShouldBind(postsCommentsVO)
+	comment := model.PostsComments{}
+	err = c.ShouldBindJSON(&comment)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
-	}
-	if postsCommentsVO.Content == "" {
-		reply.CreateJSONError(c, reply.ParamError)
-		return fmt.Errorf("param error")
+		logrus.Errorf("can not bind param: %v", err)
+		panic(reply.ParamError)
 	}
 
-	commentsPO := &po.PostsComments{
-		AuthorId: user.Id,
-		Content:  postsCommentsVO.Content,
-		PostsId:  postsCommentsVO.PostsId,
+	if comment.Content == "" && comment.PostsID == 0 {
+		panic(reply.ParamError)
 	}
+
+	comment.AuthorID = user.ID
 
 	treePath := ""
-	if postsCommentsVO.ParentId == 0 {
-		session.InsertOne(commentsPO)
-		treePath = fmt.Sprintf("%d%s", commentsPO.Id, constants.TreePath)
+	if comment.ParentID == 0 {
+		if _, _, err := dao.AddPostsComments(tx, &comment); err != nil {
+			logrus.Errorf("insert comment failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
+		treePath = fmt.Sprintf("%d%s", comment.ID, constants.TreePath)
 	} else {
-		parentComments := &po.PostsComments{}
-		session.ID(postsCommentsVO.ParentId).Get(parentComments)
-		if parentComments.Id == 0 {
-			reply.CreateJSONError(c, reply.DataNoExist)
-			return fmt.Errorf("no parent comments")
+		parentComment := &model.PostsComments{}
+		parentComment, err := dao.GetPostsComments(tx, comment.ParentID)
+		if err != nil {
+			switch err {
+			case gorm.ErrRecordNotFound:
+				logrus.Errorf("there is no parent comment: %v", err)
+				panic(reply.DataNoExist)
+			default:
+				logrus.Errorf("can not get parent comment: %v", err)
+				panic(reply.DatabaseSqlParseError)
+			}
+		}
+		if parentComment.ID == 0 {
+			logrus.Errorf("get parent comment failed")
+			panic(reply.DatabaseSqlParseError)
 		}
 
-		commentsPO.ParentId = parentComments.Id
-		session.InsertOne(commentsPO)
+		comment.ParentID = parentComment.ID
 
-		treePath = fmt.Sprintf("%s%d%s", parentComments.TreePath, commentsPO.Id, constants.TreePath)
+		if _, _, err := dao.AddPostsComments(tx, &comment); err != nil {
+			logrus.Errorf("insert comment failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
+
+		treePath = fmt.Sprintf("%s%d%s", parentComment.TreePath, comment.ID, constants.TreePath)
 	}
 
-	commentsPO.TreePath = treePath
-	session.ID(commentsPO.Id).Update(commentsPO)
-	err = incrementComments(session, commentsPO.PostsId)
+	comment.TreePath = null.StringFrom(treePath)
+
+	if err := tx.Where("id = ?", comment.ID).Updates(&comment).Error; err != nil {
+		logrus.Errorf("can not update comment")
+		panic(reply.DatabaseSqlParseError)
+	}
+
+	err = incrementComments(tx, comment.PostsID)
 	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return err
+		logrus.Errorf("couldn't update post's comment count: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
-func replyComments(c *gin.Context, session *xorm.Session) error {
-	commentsVO := &vo.PostsComments{}
-	err := c.ShouldBindJSON(commentsVO)
+func replyComments(c *gin.Context, tx *gorm.DB) {
+	comment := model.PostsComments{}
+	err := c.ShouldBindJSON(&comment)
 	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return err
+		panic(reply.ParamError)
 	}
 	rpl, err := messaging.Client.PublishOnQueueWaitReply([]byte{}, "auth.selectAdmin")
 	if err != nil || !bytes.Contains(rpl, []byte("00000")) {
-		reply.CreateJSONError(c, reply.Error)
-		return err
+		panic(reply.Error)
 	}
 
-	user := uservo.AuthUser{}
-	jsoniter.Get(rpl, "model").ToVal(&user)
-	if user.Id == 0 {
-		reply.CreateJSONError(c, reply.AccountNotExist)
-		return fmt.Errorf("can not get admin")
-	}
-	commentsPO := po.PostsComments{}
-	if _, err := session.ID(commentsVO.ParentId).Get(&commentsPO); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
+	admin := model.AuthUser{}
+	jsoniter.Get(rpl, "model").ToVal(&admin)
+	if admin.ID == 0 {
+		panic(reply.AccountNotExist)
 	}
 
-	commentsPO.ParentId = commentsVO.ParentId
-	commentsPO.Content = commentsVO.Content
-	commentsPO.AuthorId = user.Id
-	commentsPO.CreateTime = time.Time{}
-
-	session.InsertOne(commentsPO)
-	commentsPO.TreePath = fmt.Sprintf("%s%d%s", commentsPO.TreePath, commentsPO.Id, constants.TreePath)
-	if _, err := session.ID(commentsPO.Id).Update(commentsPO); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
+	commentPO := model.PostsComments{}
+	if err := tx.Where("id = ?", comment.ParentID).First(&commentPO).Error; err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			logrus.Errorf("no parent comment: %v", err)
+			panic(reply.DataNoExist)
+		default:
+			logrus.Errorf("")
+			panic(reply.DatabaseSqlParseError)
+		}
 	}
 
-	err = incrementComments(session, commentsPO.PostsId)
+	commentPO.ParentID = comment.ParentID
+	commentPO.Content = comment.Content
+	commentPO.AuthorID = admin.ID
+
+	dao.AddPostsComments(tx, &commentPO)
+
+	commentPO.TreePath = null.StringFrom(fmt.Sprintf("%s%d%s", commentPO.TreePath, commentPO.ID, constants.TreePath))
+	if _, _, err := dao.UpdatePostsComments(tx, commentPO.ID, &commentPO); err != nil {
+		switch err {
+		case dao.ErrNotFound:
+			logrus.Errorf("there no comment %d: %v", commentPO.ID, err)
+			panic(reply.DataNoExist)
+		case dao.ErrUpdateFailed:
+			logrus.Errorf("can not update comments: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
+	}
+
+	err = incrementComments(tx, commentPO.PostsID)
 	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return err
+		logrus.Errorf("increase comments' count failed: %v", err)
+		panic(reply.Error)
 	}
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
-func incrementComments(session *xorm.Session, posts_id int64) error {
-	_, err := session.Exec("update closetool_posts set comments = comments+1 where id = ?", posts_id)
+func incrementComments(tx *gorm.DB, posts_id int64) error {
+	err := tx.Exec("update posts set comments = comments+1 where id = ?", posts_id).Error
 	return err
 }
 
-func deletePostsComments(c *gin.Context, session *xorm.Session) error {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+func deletePostsComments(c *gin.Context, tx *gorm.DB) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
+		logrus.Errorf("binding param failed: %v", err)
+		panic(reply.ParamError)
 	}
 
-	if _, err := session.ID(id).Delete(&po.PostsComments{}); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
+	if _, err := dao.DeletePostsComments(tx, id); err != nil {
+		logrus.Errorf("delete comment failed: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
+
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
 func getPostsComments(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return
+		logrus.Errorf("binding param failed: %v", err)
+		panic(reply.ParamError)
 	}
 
-	comments := po.PostsComments{}
-	if _, err = db.DB.ID(id).Get(&comments); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-	parentIds := []interface{}{}
-	userIds := []int64{}
+	comment := model.PostsComments{}
 
-	parentIds = append(parentIds, comments.ParentId)
-	userIds = append(userIds, comments.AuthorId)
-
-	parentCommentsList := map[int64]po.PostsComments{}
-	if err := db.DB.In("id", parentIds...).Find(&parentCommentsList); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-
-	for _, parentComments := range parentCommentsList {
-		userIds = append(userIds, parentComments.AuthorId)
+	if err := db.Gorm.Model(&model.PostsComments{}).
+		Where("id = ?", id).
+		Preload("ParentComments").
+		Preload("Posts").
+		First(&comment).Error; err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			logrus.Errorf("this is no comment: %v", err)
+			panic(reply.DataNoExist)
+		default:
+			logrus.Errorf("can not get comment: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
 	}
 
-	bts, err := jsoniter.Marshal(userIds)
-	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return
-	}
-	rpl, err := messaging.Client.PublishOnQueueWaitReply(bts, "auth.getUserById")
-	if err != nil || !bytes.Contains(rpl, []byte("00000")) {
-		reply.CreateJSONError(c, reply.Error)
-		return
-	}
-	authors := map[int64]uservo.AuthUser{}
-	jsoniter.Get(rpl, "model").ToVal(authors)
-
-	posts := po.Posts{}
-	if _, err := db.DB.ID(comments.PostsId).Get(&posts); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+	userIDs := []int64{comment.AuthorID}
+	if comment.ParentComments != nil {
+		userIDs = append(userIDs, comment.ParentComments.AuthorID)
 	}
 
-	author := authors[comments.AuthorId]
-	parentAuthor := authors[parentCommentsList[comments.ParentId].AuthorId]
-	commentsVO := vo.PostsComments{
-		Id:             comments.Id,
-		Content:        comments.Content,
-		CreateTime:     &models.JSONTime{comments.CreateTime},
-		AuthorName:     author.Name,
-		AuthorAvatar:   author.Avatar,
-		ParentUserName: parentAuthor.Name,
-		Title:          posts.Title,
+	rpl, err := messaging.SendRequest("auth.getUserById", userIDs)
+	if err != nil || rpl.Success == 0 {
+		logrus.Errorf("amqp request failed: %v", err)
+		panic(reply.Error)
 	}
-	reply.CreateJSONModel(c, commentsVO)
+	users := rpl.Model.(map[int64]model.AuthUser)
+
+	comment.AuthorName = users[comment.AuthorID].Name.String
+	comment.AuthorAvatar = users[comment.AuthorID].Avatar.String
+	if comment.ParentComments != nil {
+		comment.ParentUserName = users[comment.ParentComments.AuthorID].Name.String
+	}
+	comment.Title = comment.Posts.Title
+
+	reply.CreateJSONModel(c, comment)
 }
 
-func getPostsCommentsByPostsId(c *gin.Context) {
-	commentsVO := vo.PostsComments{}
-	err := c.ShouldBindJSON(&commentsVO)
+func getPostsCommentsByPostsIdList(c *gin.Context) {
+	comment := model.PostsComments{}
+	err := c.ShouldBindQuery(&comment)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return
+		logrus.Errorf("binding param failed: %v", err)
+		panic(reply.ParamError)
 	}
 
-	page := pageutils.CheckAndInitPage(commentsVO.BaseVO)
-	commentsList := []po.PostsComments{}
-	if page.Total, err = db.DB.Desc("create_time").Where("posts_id = ?", commentsVO.PostsId).FindAndCount(&commentsList); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+	page := pageutils.CheckAndInitPage(comment.BaseVO)
+	comments := []model.PostsComments{}
+
+	if err := db.Gorm.Model(&comment).
+		Preload("ParentComments").
+		Where("posts_id = ?", comment.PostsID).
+		Count(&page.Total).
+		Scopes(dao.Paginate(page)).
+		Find(&comments).Error; err != nil {
+		logrus.Errorf("can not get comments")
+		panic(reply.DatabaseSqlParseError)
 	}
-	parentIds := []interface{}{}
+
 	userIds := []int64{}
-	for _, comments := range commentsList {
-		parentIds = append(parentIds, comments.ParentId)
-		userIds = append(userIds, comments.AuthorId)
-	}
-
-	parentCommentsList := map[int64]po.PostsComments{}
-	if err := db.DB.In("id", parentIds...).Find(&parentCommentsList); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-
-	for _, parentComments := range parentCommentsList {
-		userIds = append(userIds, parentComments.AuthorId)
-	}
-
-	bts, err := jsoniter.Marshal(userIds)
-	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return
-	}
-	rpl, err := messaging.Client.PublishOnQueueWaitReply(bts, "auth.getUserById")
-	if err != nil || !bytes.Contains(rpl, []byte("00000")) {
-		reply.CreateJSONError(c, reply.Error)
-		return
-	}
-	authors := map[int64]uservo.AuthUser{}
-	jsoniter.Get(rpl, "model").ToVal(authors)
-	commentsVOList := []interface{}{}
-	for _, comments := range commentsList {
-		author := authors[comments.AuthorId]
-		parentAuthor := authors[parentCommentsList[comments.ParentId].AuthorId]
-		commentsVO := vo.PostsComments{
-			Id:             comments.Id,
-			Content:        comments.Content,
-			CreateTime:     &models.JSONTime{comments.CreateTime},
-			AuthorName:     author.Name,
-			AuthorAvatar:   author.Avatar,
-			ParentUserName: parentAuthor.Name,
+	for _, c := range comments {
+		userIds = append(userIds, c.AuthorID)
+		if c.ParentComments != nil {
+			userIds = append(userIds, c.ParentComments.AuthorID)
 		}
-		commentsVOList = append(commentsVOList, commentsVO)
 	}
-	reply.CreateJSONPaging(c, commentsVOList, page)
+
+	rpl, err := messaging.SendRequest("auth.getUserById", userIds)
+	if err != nil || rpl.Success != 1 {
+		logrus.Errorf("amqp request failed: %v", err)
+		panic(reply.Error)
+	}
+	users := rpl.Model.(map[int64]model.AuthUser)
+
+	for i := range comments {
+		comments[i].AuthorName = users[comments[i].AuthorID].Name.String
+		comments[i].AuthorAvatar = users[comments[i].AuthorID].Avatar.String
+		if comments[i].ParentComments != nil {
+			comments[i].ParentUserName = users[comments[i].ParentComments.AuthorID].Name.String
+		}
+	}
+
+	reply.CreateJSONPaging(c, model.Comments2Ints(comments), page)
 }
 
 //太麻烦了 复制粘贴 有缘再改吧
 func getPostsCommentsList(c *gin.Context) {
-	commentsVO := vo.PostsComments{}
-	err := c.ShouldBindJSON(&commentsVO)
+	comment := model.PostsComments{}
+	err := c.ShouldBindQuery(&comment)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return
+		logrus.Errorf("binding param failed: %v", err)
+		panic(reply.ParamError)
 	}
 
-	page := pageutils.CheckAndInitPage(commentsVO.BaseVO)
-	commentsList := []po.PostsComments{}
-	if commentsVO.BaseVO != nil && commentsVO.Keywords != "" {
-		db.DB.Where("closetool_posts_comments.content like", "%"+commentsVO.Keywords+"%")
+	page := pageutils.CheckAndInitPage(comment.BaseVO)
+	comments := []model.PostsComments{}
+
+	if err := db.Gorm.Model(&comment).
+		Preload("ParentComments").
+		Preload("Posts").
+		Scopes(dao.CommentsCond(&comment)).
+		Count(&page.Total).
+		Scopes(dao.Paginate(page)).
+		Find(&comments).Error; err != nil {
+		logrus.Errorf("can not get comments")
+		panic(reply.DatabaseSqlParseError)
 	}
-	if commentsVO.Id != 0 {
-		db.DB.Where("closetool_posts_comments.id = ?", commentsVO.Id)
-	}
-	if page.Total, err = db.DB.Desc("create_time").Where("posts_id = ?", commentsVO.PostsId).FindAndCount(&commentsList); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-	parentIds := []interface{}{}
+
 	userIds := []int64{}
-	for _, comments := range commentsList {
-		parentIds = append(parentIds, comments.ParentId)
-		userIds = append(userIds, comments.AuthorId)
-	}
-
-	parentCommentsList := map[int64]po.PostsComments{}
-	if err := db.DB.In("id", parentIds...).Find(&parentCommentsList); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-
-	for _, parentComments := range parentCommentsList {
-		userIds = append(userIds, parentComments.AuthorId)
-	}
-
-	bts, err := jsoniter.Marshal(userIds)
-	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return
-	}
-	rpl, err := messaging.Client.PublishOnQueueWaitReply(bts, "auth.getUserById")
-	if err != nil || !bytes.Contains(rpl, []byte("00000")) {
-		reply.CreateJSONError(c, reply.Error)
-		return
-	}
-	authors := map[int64]uservo.AuthUser{}
-	jsoniter.Get(rpl, "model").ToVal(authors)
-	commentsVOList := []interface{}{}
-	for _, comments := range commentsList {
-		author := authors[comments.AuthorId]
-		parentAuthor := authors[parentCommentsList[comments.ParentId].AuthorId]
-		commentsVO := vo.PostsComments{
-			Id:             comments.Id,
-			Content:        comments.Content,
-			CreateTime:     &models.JSONTime{comments.CreateTime},
-			AuthorName:     author.Name,
-			AuthorAvatar:   author.Avatar,
-			ParentUserName: parentAuthor.Name,
+	for _, c := range comments {
+		userIds = append(userIds, c.AuthorID)
+		if c.ParentComments != nil {
+			userIds = append(userIds, c.ParentComments.AuthorID)
 		}
-		commentsVOList = append(commentsVOList, commentsVO)
 	}
-	reply.CreateJSONPaging(c, commentsVOList, page)
+
+	rpl, err := messaging.SendRequest("auth.getUserById", userIds)
+	if err != nil || rpl.Success != 1 {
+		logrus.Errorf("amqp request failed: %v", err)
+		panic(reply.Error)
+	}
+	users := rpl.Model.(map[int64]model.AuthUser)
+
+	for i := range comments {
+		comments[i].AuthorName = users[comments[i].AuthorID].Name.String
+		comments[i].AuthorAvatar = users[comments[i].AuthorID].Avatar.String
+		if comments[i].ParentComments != nil {
+			comments[i].ParentUserName = users[comments[i].ParentComments.AuthorID].Name.String
+		}
+	}
+
+	reply.CreateJSONPaging(c, model.Comments2Ints(comments), page)
 }

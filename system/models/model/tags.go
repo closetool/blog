@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/closetool/blog/system/models"
 	"github.com/guregu/null"
 	uuid "github.com/satori/go.uuid"
 )
@@ -45,18 +46,31 @@ type Tags struct {
 	//[ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
 	ID int64 `gorm:"primaryKey;autoIncrement;column:id;" json:"id,omitempty" form:"id"`
 	//[ 1] name                                           varchar(32)          null: false  primary: false  isArray: false  auto: false  col: varchar         len: 32      default: []
-	Name string `gorm:"column:name;type:varchar(32);size:32;" json:"name,omitempty" form:"name"` // 名称
+	Name string `gorm:"column:name;type:varchar(32);size:32;unique;" json:"name,omitempty" form:"name"` // 名称
 	//[ 2] sort                                           smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
 	Sort int32 `gorm:"column:sort;type:smallint;default:0;" json:"sort,omitempty" form:"sort"` // 排序
 	//[ 3] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	CreateTime time.Time `gorm:"column:create_time;type:datetime;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"` // 创建时间
+	CreateTime int64 `gorm:"column:create_time;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"` // 创建时间
 	//[ 4] create_by                                      bigint               null: true   primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
 	CreateBy null.Int `gorm:"column:create_by;type:bigint;" json:"createBy,omitempty" form:"createBy"` // 创建人
 	//[ 5] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	UpdateTime time.Time `gorm:"column:update_time;type:datetime;autoUpdateTime:milli;" json:"updateTime,omitempty" form:"updateTime"` // 更新时间
+	UpdateTime int64 `gorm:"column:update_time;autoUpdateTime:milli;" json:"updateTime,omitempty" form:"updateTime"` // 更新时间
 	//[ 6] update_by                                      bigint               null: true   primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
 	UpdateBy null.Int `gorm:"column:update_by;type:bigint;" json:"updateBy,omitempty" form:"updateBy"` // 更新人
 
+	//Categorys []Category `gorm:"many2many:category_tags;foreignKey:Name;joinForeignKey:TagsName;References:Name;joinReferences:CategoryName;"`
+
+	PostsTotal int64 `gorm:"-" form:"postsTotal" json:"postsTotal,omitempty"`
+
+	*models.BaseVO
+}
+
+func Tags2Interfaces(tags []Tags) []interface{} {
+	ints := make([]interface{}, len(tags))
+	for i, tag := range tags {
+		ints[i] = tag
+	}
+	return ints
 }
 
 var tagsTableInfo = &TableInfo{
@@ -218,9 +232,9 @@ func (t *Tags) TableName() string {
 }
 
 // BeforeSave invoked before saving, return an error if field is not populated.
-func (t *Tags) BeforeSave() error {
-	return nil
-}
+//func (t *Tags) BeforeSave() error {
+//	return nil
+//}
 
 // Prepare invoked before saving, can be used to populate fields etc.
 func (t *Tags) Prepare() {

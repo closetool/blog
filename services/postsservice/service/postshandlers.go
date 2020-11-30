@@ -2,20 +2,17 @@ package service
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
-	categoryvo "github.com/closetool/blog/services/categoryservice/models/vo"
-	logsvo "github.com/closetool/blog/services/logservice/models/vo"
 	"github.com/closetool/blog/services/postsservice/models/po"
-	"github.com/closetool/blog/services/postsservice/models/vo"
-	uservo "github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/messaging"
 	"github.com/closetool/blog/system/models"
+	"github.com/closetool/blog/system/models/dao"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/closetool/blog/system/reply"
 	"github.com/closetool/blog/utils/pageutils"
 	"github.com/closetool/blog/utils/previewtextutils"
@@ -23,12 +20,13 @@ import (
 	"github.com/gomarkdown/markdown"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
-	"xorm.io/xorm"
+	"gorm.io/gorm"
 )
 
 func Health(c *gin.Context) {
-	if db.DB == nil {
+	if db.Gorm == nil {
 		c.JSON(http.StatusOK, map[string]bool{"health": false})
+		return
 	}
 	c.JSON(http.StatusOK, map[string]bool{"health": true})
 }
@@ -43,70 +41,25 @@ func (p PostsAndTags) TableName() string {
 }
 
 func getPostsListWeight(c *gin.Context, IsWeight int64) {
-	logrus.Debugln(c.Request.URL.RawQuery)
-	postsVO := vo.Posts{Status: -1}
-	c.ShouldBindQuery(&postsVO)
-	logrus.Debugf("%#v", postsVO)
-	logrus.Debugf("%#v", postsVO.BaseVO)
-	page := pageutils.CheckAndInitPage(postsVO.BaseVO)
+	post := model.Posts{}
+	c.ShouldBindQuery(&post)
+	logrus.Debugf("%#v", post)
+	logrus.Debugf("%#v", post.BaseVO)
+	page := pageutils.CheckAndInitPage(post.BaseVO)
 	logrus.Debugf("%#v", page)
 
-	postsVO.IsWeight = IsWeight
+	post.IsWeight = IsWeight
 
-	session := db.DB.NewSession()
+	posts := make([]model.Posts, 0)
 
-	if postsVO.BaseVO != nil && postsVO.Keywords != "" {
-		session = session.Where("title like ?", "%"+postsVO.Keywords+"%")
-	}
-	if postsVO.Id != 0 {
-		session = session.Where("closetool_posts.id = ?", postsVO.Id)
-	}
-	if postsVO.CreateTime != nil {
-		session = session.Where("closetool_posts.create_time = ?", postsVO.CreateTime)
-	}
-	if postsVO.CategoryId != 0 {
-		session = session.Where("category_id = ?", postsVO.CategoryId)
-	}
-	if postsVO.PostsTagsId != 0 {
-		session = session.Where("closetool_posts_tags.tags_id = ?", postsVO.PostsTagsId)
-	}
-	if postsVO.Title != "" {
-		session = session.Where("title = ?", postsVO.Title)
-	}
-	if postsVO.Status != -1 {
-		session = session.Where("status = ?", postsVO.Status)
-	}
-	if postsVO.IsWeight != 0 {
-		session = session.Desc("weight")
-	} else {
-		session = session.Desc("closetool_posts.id")
-	}
-
-	session = session.Limit(pageutils.StartAndEnd(page))
-	session = session.
-		Table("closetool_posts").
-		Join("LEFT OUTER", "closetool_posts_tags", "closetool_posts.id=closetool_posts_tags.posts_id")
-	var err error
-	//page.Total, err = session.Count(&PostsAndTags{})
-	//logrus.Debugln(page.Total, err)
-
-	POs := make([]PostsAndTags, 0)
-	if page.Total, err = session.
-		//Distinct("closetool_posts.id").
-		FindAndCount(&POs); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		logrus.Debug(err)
-		return
-	}
-
-	logrus.Debugf("%d %#v", page.Total, POs)
+	db.Gorm.Model(&post).Preload("PostsTags").Scopes(dao.PostsCond(&post)).Count(&page.Total).Scopes(dao.Paginate(page)).Find(&posts)
 
 	var categoryNames, userNames = make(map[int64]string), make(map[int64]string)
-	categoryIds := make([]int64, len(POs))
-	userIds := make([]int64, len(POs))
-	for i, PO := range POs {
-		categoryIds[i] = PO.CategoryId
-		userIds[i] = PO.AuthorId
+	categoryIds := make([]int64, len(posts))
+	userIds := make([]int64, len(posts))
+	for i, post := range posts {
+		categoryIds[i] = post.CategoryID.Int64
+		userIds[i] = post.AuthorID.Int64
 	}
 
 	temp, err := jsoniter.Marshal(categoryIds)
@@ -134,28 +87,15 @@ func getPostsListWeight(c *gin.Context, IsWeight int64) {
 	}
 	jsoniter.Get(rpl, "model").ToVal(&userNames)
 
-	postsVOs := make([]interface{}, 0)
-	for _, PO := range POs {
-		temp := vo.Posts{
-			Id:           PO.Posts.Id,
-			Title:        PO.Title,
-			Status:       PO.Status,
-			Summary:      PO.Summary,
-			Thumbnail:    PO.Thumbnail,
-			Author:       userNames[PO.AuthorId],
-			Views:        PO.Views,
-			Comments:     PO.Comments,
-			CategoryId:   PO.CategoryId,
-			CategoryName: categoryNames[PO.CategoryId],
-			Weight:       PO.Weight,
-			CreateTime:   &models.JSONTime{PO.Posts.CreateTime},
-		}
-		postsTagsList := make([]po.PostsTags, 0)
-		db.DB.Where("posts_id = ?", temp.Id).Find(&postsTagsList)
-		tagsList := make([]*categoryvo.Tags, 0)
+	for i, post := range posts {
+
+		posts[i].Author = userNames[post.AuthorID.Int64]
+		posts[i].CategoryName = categoryNames[post.CategoryID.Int64]
+
+		tagsList := make([]model.Tags, 0)
 		tagsIds := make([]int64, 0)
-		for _, postsTags := range postsTagsList {
-			tagsIds = append(tagsIds, postsTags.TagsId)
+		for _, postsTags := range post.PostsTags {
+			tagsIds = append(tagsIds, postsTags.TagsID)
 		}
 
 		if len(tagsIds) != 0 {
@@ -170,11 +110,13 @@ func getPostsListWeight(c *gin.Context, IsWeight int64) {
 				return
 			}
 			jsoniter.Get(rpl, "models").ToVal(&tagsList)
-			temp.TagsList = tagsList
+			posts[i].TagsList = tagsList
 		}
-		postsVOs = append(postsVOs, temp)
 	}
-	reply.CreateJSONPaging(c, postsVOs, page)
+
+	ints := model.Posts2Interfaces(posts)
+
+	reply.CreateJSONPaging(c, ints, page)
 }
 
 func getPostsList(c *gin.Context) {
@@ -187,84 +129,52 @@ func getWeightList(c *gin.Context) {
 
 func getArchiveTotalByDateList(c *gin.Context) {
 
-	postsVOList := make([]vo.Posts, 0)
-	var (
-		err error
-		m   []map[string]string
-	)
-	if m, err = db.DB.SQL(`SELECT
-			DATE_FORMAT( create_time, "%Y-%m-01 00:00:00" ) archiveDate,
+	posts := make([]model.Posts, 0)
+
+	if rows, err := db.Gorm.Raw(`SELECT
+			FROM_UNIXTIME( create_time/1000, "%Y-%m-01 00:00:00" ) archiveDate,
 			COUNT(*) articleTotal
 			FROM
-			closetool_posts
-			GROUP BY DATE_FORMAT( create_time, "%Y-%m-01 00:00:00" )`).QueryString(); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+			posts	
+			GROUP BY FROM_UNIXTIME( create_time/1000, "%Y-%m-01 00:00:00" )`).Rows(); err != nil && err != gorm.ErrRecordNotFound {
+		logrus.Errorf("select archive data from db failed: %v", err)
+		panic(reply.DatabaseSqlParseError)
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var (
+				archiveDate  time.Time
+				articleTotal int64
+			)
+			rows.Scan(&archiveDate, &articleTotal)
+			posts = append(posts, model.Posts{
+				ArchiveDate:  &models.JSONTime{archiveDate},
+				ArchiveTotal: articleTotal,
+			})
+		}
 	}
 
-	for _, data := range m {
-		tm, err := time.Parse("2006-01-02 15:04:05", data["archiveDate"])
-		if err != nil {
-			reply.CreateJSONError(c, reply.Error)
-			return
-		}
-		count, err := strconv.ParseInt(data["articleTotal"], 10, 64)
-		if err != nil {
-			reply.CreateJSONError(c, reply.Error)
-			return
-		}
-		postsVOList = append(postsVOList, vo.Posts{
-			ArticleTotal: count,
-			ArchiveDate:  &models.JSONTime{tm},
-		})
-	}
-
-	for i, postsVO := range postsVOList {
-		if err != nil {
-			reply.CreateJSONError(c, reply.Error)
-			return
-		}
-		postsPOs := make([]po.Posts, 0)
-		if err := db.DB.
-			Where(`DATE_FORMAT( create_time,"%Y-%m-01 00:00:00")=DATE_FORMAT(?, "%Y-%m-01 00:00:00" )`, postsVO.ArchiveDate).
-			Find(&postsPOs); err != nil {
+	for i, post := range posts {
+		archivePosts := make([]model.Posts, 0)
+		if err := db.Gorm.
+			Where(`DATE_FORMAT( create_time,"%Y-%m-01 00:00:00")=DATE_FORMAT(?, "%Y-%m-01 00:00:00" )`, post.ArchiveDate).
+			Find(&archivePosts).Error; err != nil && err != gorm.ErrRecordNotFound {
 			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
 			return
 		}
 
-		postsVOs := make([]*vo.Posts, 0)
-		for _, postsPO := range postsPOs {
-			postsVOs = append(postsVOs, &vo.Posts{
-				Id:         postsPO.Id,
-				AuthorId:   postsPO.AuthorId,
-				Title:      postsPO.Title,
-				Thumbnail:  postsPO.Thumbnail,
-				Comments:   postsPO.Comments,
-				IsComment:  postsPO.IsComment,
-				CategoryId: postsPO.CategoryId,
-				SyncStatus: postsPO.SyncStatus,
-				Status:     postsPO.Status,
-				Summary:    postsPO.Summary,
-				Views:      postsPO.Views,
-				Weight:     postsPO.Weight,
-				CreateTime: &models.JSONTime{postsPO.CreateTime},
-				UpdateTime: &models.JSONTime{postsPO.UpdateTime},
-			})
-		}
-		postsVOList[i].ArchivePosts = postsVOs
+		posts[i].ArchivePosts = archivePosts
 	}
-	temp := make([]interface{}, 0)
-	for _, postsVO := range postsVOList {
-		temp = append(temp, postsVO)
-	}
-	reply.CreateJSONModels(c, temp)
+	reply.CreateJSONModels(c, model.Posts2Interfaces(posts))
 }
 
-//TODO:先实现logservice
 func getHotPostsList(c *gin.Context) {
-	postsVO := &vo.Posts{}
-	c.ShouldBindQuery(postsVO)
-	page := pageutils.CheckAndInitPage(postsVO.BaseVO)
+	post := &model.Posts{}
+	if err := c.ShouldBindQuery(post); err != nil {
+		logrus.Errorf("binding param failed: %v", err)
+		panic(reply.ParamError)
+	}
+	page := pageutils.CheckAndInitPage(post.BaseVO)
 
 	rpl, err := messaging.Client.PublishOnQueueWaitReply([]byte(constants.PostsDetail), "logs.getParamGroupByCode")
 	if err != nil || !bytes.Contains(rpl, []byte("00000")) {
@@ -275,147 +185,103 @@ func getHotPostsList(c *gin.Context) {
 		reply.CreateJSONsuccess(c)
 		return
 	}
-	logsVOs := make([]logsvo.AuthUserLog, 0)
-	jsoniter.Get(rpl, "models").ToVal(&logsVOs)
+
+	logs := make([]model.AuthUserLog, 0)
+	jsoniter.Get(rpl, "models").ToVal(&logs)
 	ids := make([]interface{}, 0)
-	for _, logVO := range logsVOs {
-		id := jsoniter.Get([]byte(logVO.Parameter), "id").ToInt64()
+	for _, log := range logs {
+		id := jsoniter.Get([]byte(log.Parameter.String), "id").ToInt64()
 		ids = append(ids, id)
 	}
-	postsPOs := make([]po.Posts, 0)
-	if page.Total, err = db.DB.In("id", ids...).Limit(pageutils.StartAndEnd(page)).FindAndCount(&postsPOs); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-	postsVOs := make([]interface{}, 0)
-	for _, postsPO := range postsPOs {
-		postsVOs = append(postsVOs, &vo.Posts{
-			Id:         postsPO.Id,
-			AuthorId:   postsPO.AuthorId,
-			Title:      postsPO.Title,
-			Thumbnail:  postsPO.Thumbnail,
-			Comments:   postsPO.Comments,
-			IsComment:  postsPO.IsComment,
-			CategoryId: postsPO.CategoryId,
-			SyncStatus: postsPO.SyncStatus,
-			Status:     postsPO.Status,
-			Summary:    postsPO.Summary,
-			Views:      postsPO.Views,
-			Weight:     postsPO.Weight,
-			CreateTime: &models.JSONTime{postsPO.CreateTime},
-			UpdateTime: &models.JSONTime{postsPO.UpdateTime},
-		})
+
+	hotPosts := make([]model.Posts, 0)
+	if err := db.Gorm.Where("id in ?", ids).Count(&page.Total).Scopes(dao.Paginate(page)).Find(&hotPosts).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			logrus.Errorf("find posts by id failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
 	}
 
-	reply.CreateJSONPaging(c, postsVOs, page)
+	reply.CreateJSONPaging(c, model.Posts2Interfaces(hotPosts), page)
 }
 
-func savePosts(c *gin.Context, session *xorm.Session) error {
-	postsVO := &vo.Posts{
-		Status:    2,
-		IsComment: 1,
+func savePosts(c *gin.Context, tx *gorm.DB) {
+	post := model.Posts{
+		Status: 2,
 	}
-	err := c.ShouldBindJSON(postsVO)
+	err := c.ShouldBindJSON(&post)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
+		logrus.Errorf("binding param failed: %v", err)
+		panic(reply.ParamError)
 	}
 
 	s, exist := c.Get("session")
-	user, ok := s.(uservo.AuthUser)
+	user, ok := s.(model.AuthUser)
 	if !exist || !ok {
-		reply.CreateJSONError(c, reply.AccessNoPrivilege)
-		return fmt.Errorf("获取session失败")
+		panic(reply.AccessNoPrivilege)
 	}
 
-	html := markdown.ToHTML([]byte(postsVO.Content), nil, nil)
-	postsPO := &po.Posts{
-		Title:      postsVO.Title,
-		Thumbnail:  postsVO.Thumbnail,
-		Status:     postsVO.Status,
-		Summary:    previewtextutils.GetText(string(html), 126),
-		IsComment:  postsVO.IsComment,
-		AuthorId:   user.Id,
-		CategoryId: postsVO.CategoryId,
-		Weight:     postsVO.Weight,
+	html := markdown.ToHTML([]byte(post.Content), nil, nil)
+	post.Summary = previewtextutils.GetText(string(html), 126)
+	post.AuthorID.Scan(user.ID)
+	post.PostsAttribute.Content = post.Content
+
+	if err := tx.Create(&post).Error; err != nil {
+		logrus.Errorf("failed to insert into db: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
-	if _, err := session.InsertOne(postsPO); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
-	}
-	postsAttributePO := &po.PostsAttribute{
-		Content: postsVO.Content,
-		PostsId: postsPO.Id,
-	}
-	if _, err := session.InsertOne(postsAttributePO); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
-	}
-	if postsVO.TagsList == nil {
+
+	if post.TagsList == nil {
 		reply.CreateJSONsuccess(c)
-		return nil
 	}
 
-	bts, err := jsoniter.Marshal(postsVO.TagsList)
+	bts, err := jsoniter.Marshal(post.TagsList)
 	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return err
+		panic(reply.Error)
 	}
 
 	var rpl []byte
 	if rpl, err = messaging.Client.PublishOnQueueWaitReply(bts, "tags.addTags"); err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return err
+		panic(reply.Error)
 	}
 	if !bytes.Contains(rpl, []byte("00000")) || !bytes.Contains(rpl, []byte("models")) {
-		reply.CreateJSONError(c, reply.Error)
-		return fmt.Errorf("create tags failed")
+		panic(reply.Error)
 	}
 	ids := make([]int64, 0)
 	jsoniter.Get(rpl, "models").ToVal(&ids)
+	post.PostsTags = make([]model.PostsTags, 0)
 	for _, id := range ids {
-		postsTagsPO := &po.PostsTags{TagsId: id, PostsId: postsPO.Id}
-		if _, err := session.InsertOne(postsTagsPO); err != nil {
-			reply.CreateJSONError(c, reply.Error)
-			return err
-		}
+		postsTag := model.PostsTags{TagsID: id, PostsID: post.ID}
+		post.PostsTags = append(post.PostsTags, postsTag)
+	}
+
+	if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&post).Error; err != nil {
+		logrus.Errorf("update post failed: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
 func getPosts(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		reply.CreateJSONError(c, reply.ParamError)
 		return
 	}
-	postsPO := &po.Posts{}
-	if _, err := db.DB.ID(id).Get(postsPO); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+	post := model.Posts{}
+	if err := db.Gorm.Preload("PostsTags").Preload("PostsAttribute").First(&post, id).Error; err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			panic(reply.DataNoExist)
+		default:
+			logrus.Errorf("get post from db failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
 	}
 
-	postsVO := vo.Posts{
-		CreateTime: &models.JSONTime{postsPO.CreateTime},
-		Summary:    postsPO.Summary,
-		Title:      postsPO.Title,
-		Thumbnail:  postsPO.Thumbnail,
-		IsComment:  postsPO.IsComment,
-		Views:      postsPO.Views,
-		Comments:   postsPO.Comments,
-		CategoryId: postsPO.CategoryId,
-		Weight:     postsPO.Weight,
-	}
-	postsAttr := &po.PostsAttribute{}
-	if _, err := db.DB.Where("posts_id = ?", postsPO.Id).Get(postsAttr); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-	postsVO.Content = postsAttr.Content
+	post.Content = post.PostsAttribute.Content
 
-	bts, err := jsoniter.Marshal([]int64{postsVO.CategoryId})
+	bts, err := jsoniter.Marshal([]int64{post.CategoryID.Int64})
 	if err != nil {
 		reply.CreateJSONError(c, reply.Error)
 		return
@@ -432,16 +298,11 @@ func getPosts(c *gin.Context) {
 
 	categoryNames := map[int64]string{}
 	jsoniter.Get(rpl, "model").ToVal(&categoryNames)
-	postsVO.CategoryName = categoryNames[postsVO.CategoryId]
+	post.CategoryName = categoryNames[post.CategoryID.Int64]
 
-	postsTagsList := []*po.PostsTags{}
-	if err := db.DB.Where("posts_id = ?", postsPO.Id).Find(&postsTagsList); err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return
-	}
 	ids := []int64{}
-	for _, postsTags := range postsTagsList {
-		ids = append(ids, postsTags.Id)
+	for _, postsTag := range post.PostsTags {
+		ids = append(ids, postsTag.ID)
 	}
 
 	bts, err = jsoniter.Marshal(ids)
@@ -458,199 +319,154 @@ func getPosts(c *gin.Context) {
 		return
 	}
 
-	tagsList := []*categoryvo.Tags{}
+	tagsList := []model.Tags{}
 	jsoniter.Get(rpl, "models").ToVal(tagsList)
-	postsVO.TagsList = tagsList
+	post.TagsList = tagsList
 
-	postsPO.Views++
-	db.DB.ID(postsPO.Id).Update(postsPO)
-	reply.CreateJSONModel(c, postsVO)
+	post.Views++
+	if err := db.Gorm.Select("views").Updates(&post).Error; err != nil {
+		logrus.Errorf("update post failed: %v", err)
+		panic(reply.DatabaseSqlParseError)
+	}
+	reply.CreateJSONModel(c, post)
 }
 
-func deletePosts(c *gin.Context, session *xorm.Session) error {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+func deletePosts(c *gin.Context, tx *gorm.DB) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
+		logrus.Errorf("binding param failed: %v", err)
+		panic(reply.ParamError)
 	}
-	postsPO := &po.Posts{}
-	if ok, err := session.ID(id).Get(postsPO); err != nil {
-		if err != nil {
-			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-			return err
+
+	if _, err := dao.DeletePosts(tx, id); err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			panic(reply.DataNoExist)
+		default:
+			logrus.Errorf("can not delete post from db: %v", err)
+			panic(reply.DatabaseSqlParseError)
 		}
-	} else if !ok {
-		reply.CreateJSONError(c, reply.DataNoExist)
-		return nil
-	}
-	_, err = session.ID(id).Delete(&po.Posts{})
-	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
-	}
-	_, err = session.Delete(&po.PostsAttribute{PostsId: id})
-	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
-	}
-	_, err = session.Delete(&po.PostsTags{PostsId: id})
-	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
 	}
 
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
-func updatePosts(c *gin.Context, session *xorm.Session) error {
+func updatePosts(c *gin.Context, tx *gorm.DB) {
 	s, exist := c.Get("session")
-	user, ok := s.(uservo.AuthUser)
+	user, ok := s.(model.AuthUser)
 	if !exist || !ok {
-		reply.CreateJSONError(c, reply.AccessNoPrivilege)
-		return fmt.Errorf("获取session失败")
+		panic(reply.AccessNoPrivilege)
 	}
 
-	postsVO := &vo.Posts{}
-	err := c.ShouldBindJSON(postsVO)
-	if err != nil || postsVO.Id == 0 {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
-	}
-	html := markdown.ToHTML([]byte(postsVO.Content), nil, nil)
-
-	postsPO := &po.Posts{}
-	if ok, err := session.ID(postsVO.Id).Get(postsPO); err != nil || !ok {
-		reply.CreateJSONError(c, reply.DataNoExist)
-		return nil
-	}
-	if postsPO.Id == 0 {
-		reply.CreateJSONError(c, reply.DataNoExist)
-		return nil
-	}
-	postsPO.Title = postsVO.Title
-	postsPO.Thumbnail = postsVO.Thumbnail
-	postsPO.Status = postsVO.Status
-	postsPO.Summary = previewtextutils.GetText(string(html), 126)
-	postsPO.IsComment = postsVO.IsComment
-	postsPO.AuthorId = user.Id
-	postsPO.CategoryId = postsVO.CategoryId
-	postsPO.Weight = postsVO.Weight
-
-	if _, err := session.ID(postsVO.Id).Update(postsPO); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
+	post := model.Posts{}
+	err := c.ShouldBindJSON(&post)
+	if err != nil || post.ID == 0 {
+		panic(reply.ParamError)
 	}
 
-	if count, err := session.Where("posts_id=?", postsPO.Id).Count(&po.PostsAttribute{}); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
-	} else if count == 0 {
-		if _, err = session.Where("posts_id=?", postsPO.Id).Update(&po.PostsAttribute{Content: postsVO.Content}); err != nil {
-			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-			return err
-		}
-	} else {
-		if _, err = session.InsertOne(&po.PostsAttribute{PostsId: postsPO.Id, Content: postsVO.Content}); err != nil {
-			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-			return err
-		}
+	html := markdown.ToHTML([]byte(post.Content), nil, nil)
+	post.Summary = previewtextutils.GetText(string(html), 126)
+	post.AuthorID.Scan(user.ID)
+	if err := tx.Updates(&post).Error; err != nil {
+		logrus.Errorf("can not update post: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
 
-	tagsList := postsVO.TagsList
+	//tx.Model(&post).Association("PostsTags").Replace(&post.PostsTags)
 
-	if _, err := session.Where("posts_id=?", postsPO.Id).Delete(&po.PostsTags{}); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
+	post.PostsAttribute.Content = post.Content
+	if err := tx.Model(&post).Association("PostsAttribute").Replace(&post.PostsAttribute).Error; err != nil {
+		logrus.Errorf("can not update posts attribute: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
 
-	if tagsList != nil && len(tagsList) != 0 {
-		bts, _ := jsoniter.Marshal(tagsList)
-		rpl, err := messaging.Client.PublishOnQueueWaitReply(bts, "tags.addTags")
-		if err != nil {
-			reply.CreateJSONError(c, reply.Error)
-			return err
-		}
-		if !bytes.Contains(rpl, []byte("00000")) {
+	tagsList := post.TagsList
 
-			reply.CreateJSONError(c, reply.Error)
-			return fmt.Errorf("reply isn't success")
-		}
-
-		ids := make([]int64, 0)
-		jsoniter.Get(rpl, "models").ToVal(&ids)
-		for _, id := range ids {
-			if _, err := session.InsertOne(&po.PostsTags{PostsId: postsPO.Id, TagsId: id}); err != nil {
-				reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-				return err
-			}
-		}
+	bts, _ := jsoniter.Marshal(tagsList)
+	rpl, err := messaging.Client.PublishOnQueueWaitReply(bts, "tags.addTags")
+	if err != nil {
+		logrus.Errorf("add tags failed: %v", err)
+		panic(reply.Error)
 	}
+	if !bytes.Contains(rpl, []byte("00000")) {
+		logrus.Errorf("add tags failed: %v", string(rpl))
+		panic(reply.Error)
+	}
+
+	ids := make([]int64, 0)
+	jsoniter.Get(rpl, "models").ToVal(&ids)
+
+	post.PostsTags = []model.PostsTags{}
+
+	for _, id := range ids {
+		post.PostsTags = append(post.PostsTags, model.PostsTags{PostsID: post.ID, TagsID: id})
+	}
+
+	if err := tx.Model(&post).Association("PostsAttribute").Replace(&post.PostsTags).Error; err != nil {
+		logrus.Errorf("can not update posts tags: %v", err)
+		panic(reply.DatabaseSqlParseError)
+	}
+
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
-func updatePostsStatus(c *gin.Context, session *xorm.Session) error {
-	postsVO := &vo.Posts{}
-	c.ShouldBindJSON(postsVO)
-	if postsVO.Id == 0 {
-		reply.CreateJSONError(c, reply.ParamError)
-		return nil
+func updatePostsStatus(c *gin.Context, tx *gorm.DB) {
+	post := model.Posts{}
+	err := c.ShouldBindJSON(&post)
+	if err != nil {
+		logrus.Errorf("binding param failed: %v", err)
+		panic(reply.ParamError)
 	}
-	if _, err := session.ID(postsVO.Id).Cols("status").Update(postsVO); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
+
+	if post.ID == 0 {
+		logrus.Errorf("param err")
+		panic(reply.ParamError)
 	}
+
+	if err := tx.Model(&post).Where("id = ?", post.ID).Update("status", post.Status).Error; err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			logrus.Errorf("there's no data: %v", post.ID)
+			panic(reply.DataNoExist)
+		default:
+			logrus.Errorf("can not update post's status: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
+	}
+
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
 func getArchiveGrouopYearList(c *gin.Context) {
-	postsVOList := []interface{}{}
-	maps, err := db.DB.SQL(`select
-				id,
-				title,
-				create_time,
-				DATE_FORMAT(create_time,"%Y") year 
-				FROM closetool_posts
-				order by
-				DATE_FORMAT(create_time,"%Y") DESC`).QueryString()
-
+	posts := []model.Posts{}
+	rows, err := db.Gorm.Raw(`select
+	id,
+	title,
+	create_time,
+	FROM_UNIXTIME(create_time,"%Y") year 
+	FROM posts
+	order by
+	FROM_UNIXTIME(create_time,"%Y") DESC`).Rows()
 	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+		logrus.Errorf("select posts from db failed: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
-	for _, m := range maps {
-		logrus.Debugln(m["year"])
-		logrus.Debugln(m["create_time"])
-		logrus.Debugln(m["id"])
-		logrus.Debugln(m["title"])
-		tm, err := strconv.ParseInt(m["year"], 10, 64)
-		if err != nil {
-			logrus.Debugln(err)
-			reply.CreateJSONError(c, reply.Error)
-			return
-		}
-		id, err := strconv.ParseInt(m["id"], 10, 64)
-		if err != nil {
-			logrus.Debugln(err)
-			reply.CreateJSONError(c, reply.Error)
-			return
-		}
-		createTime, err := time.Parse("2006-01-02 15:04:05", m["create_time"])
-		logrus.Debugln(m["create_time"])
-		if err != nil {
-			logrus.Debugln(err)
-			reply.CreateJSONError(c, reply.Error)
-			return
-		}
-		postsVOList = append(postsVOList, vo.Posts{
-			Id:         id,
-			Year:       tm,
-			Title:      m["title"],
-			CreateTime: &models.JSONTime{createTime},
+
+	for rows.Next() {
+		var (
+			id         int64
+			title      string
+			createTime int64
+			year       int64
+		)
+		rows.Scan(&id, &title, &createTime, &year)
+		posts = append(posts, model.Posts{
+			ID:         id,
+			Title:      title,
+			CreateTime: createTime,
+			Year:       year,
 		})
 	}
-	reply.CreateJSONModels(c, postsVOList)
+
+	reply.CreateJSONModels(c, model.Posts2Interfaces(posts))
 }

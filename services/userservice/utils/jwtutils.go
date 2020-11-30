@@ -4,18 +4,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/closetool/blog/services/userservice/models/po"
-	"github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/system/constants"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
 )
 
-func GenerateToken(userPO *po.AuthUser) (string, error, int64) {
-	user := vo.AuthUser{}
+func GenerateToken(userPO *model.AuthUser) (string, error, int64) {
+	user := model.AuthUser{}
 	user.StandardClaims = new(jwt.StandardClaims)
 	user.ExpiresAt = time.Now().Add(constants.TokenTTL).Unix()
-	user.Id = userPO.Id
+	user.ID = userPO.ID
 	user.Name = userPO.Name
 	psw := userPO.Password
 	user.Password = ""
@@ -29,7 +28,7 @@ func GenerateToken(userPO *po.AuthUser) (string, error, int64) {
 }
 
 func VerifyToken(tokenString, key string) bool {
-	token, err := jwt.ParseWithClaims(tokenString, &vo.AuthUser{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &model.AuthUser{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
@@ -39,7 +38,7 @@ func VerifyToken(tokenString, key string) bool {
 		logrus.Errorf("token is invalid: %v", err)
 		return false
 	}
-	user, ok := token.Claims.(*vo.AuthUser)
+	user, ok := token.Claims.(*model.AuthUser)
 	if !ok {
 		return false
 	}

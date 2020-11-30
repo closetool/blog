@@ -41,7 +41,7 @@ type AuthToken struct {
 	//[ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
 	ID int64 `gorm:"primaryKey;autoIncrement;column:id;" json:"id,omitempty" form:"id"`
 	//[ 1] token                                          varchar(256)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 256     default: []
-	Token string `gorm:"column:token;type:varchar;size:256;" json:"token,omitempty" form:"token"` // token
+	Token string `gorm:"column:token;type:varchar(512);size:512;" json:"token,omitempty" form:"token"` // token
 	//[ 2] expire_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
 	ExpireTime time.Time `gorm:"column:expire_time;type:datetime;" json:"expireTime,omitempty" form:"expireTime"` // 过期时间
 	//[ 3] user_id                                        bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []

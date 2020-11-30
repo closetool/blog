@@ -4,126 +4,60 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/closetool/blog/services/logservice/models/po"
-	"github.com/closetool/blog/services/logservice/models/vo"
-	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
-	"github.com/closetool/blog/system/models"
+	"github.com/closetool/blog/system/models/dao"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/closetool/blog/system/reply"
 	"github.com/closetool/blog/utils/pageutils"
 	"github.com/gin-gonic/gin"
-	"xorm.io/xorm"
+	"gorm.io/gorm"
 )
 
 func Health(c *gin.Context) {
-	if db.DB == nil {
+	if db.Gorm == nil {
 		c.JSON(http.StatusOK, map[string]bool{"health": false})
+		return
 	}
 	c.JSON(http.StatusOK, map[string]bool{"health": true})
 }
 
 func getLogs(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return
+		panic(reply.ParamError)
 	}
 
-	logPO := &po.AuthUserLog{}
-	_, err = db.DB.ID(id).Get(logPO)
+	log, err := dao.GetAuthUserLog(db.Gorm, id)
 	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+		panic(reply.DataNoExist)
 	}
-	logVO := &vo.AuthUserLog{
-		Ip:             logPO.Ip,
-		CodeName:       constants.OperationNames[logPO.Code],
-		CreateTime:     &models.JSONTime{logPO.CreateTime},
-		Parameter:      logPO.Parameter,
-		UserId:         logPO.UserId,
-		RunTime:        logPO.RunTime,
-		BrowserName:    logPO.BrowserName,
-		BrowserVersion: logPO.BrowserVersion,
-		Device:         logPO.Device,
-		Description:    logPO.Description,
-		Url:            logPO.Url,
-	}
-	reply.CreateJSONModel(c, logVO)
+	reply.CreateJSONModel(c, log)
 }
 
-func deleteLogs(c *gin.Context, session *xorm.Session) error {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+func deleteLogs(c *gin.Context, tx *gorm.DB) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return err
+		panic(reply.ParamError)
 	}
-	session.ID(id).Delete(&po.AuthUserLog{})
-	return nil
+	_, err = dao.DeleteAuthUserLog(db.Gorm, id)
+	switch err {
+	case dao.ErrNotFound:
+		panic(reply.DataNoExist)
+	case dao.ErrDeleteFailed:
+		panic(reply.DatabaseSqlParseError)
+	}
+	reply.CreateJSONsuccess(c)
 }
 
 func getLogsList(c *gin.Context) {
-	logVO := &vo.AuthUserLog{}
-	c.ShouldBindQuery(logVO)
-	page := pageutils.CheckAndInitPage(logVO.BaseVO)
+	log := model.AuthUserLog{}
+	c.ShouldBindQuery(&log)
+	page := pageutils.CheckAndInitPage(log.BaseVO)
 
-	session := db.DB.NewSession()
-	if logVO.UserId != "" {
-		session = session.Where("user_id = ?", logVO.UserId)
+	logs := make([]model.AuthUserLog, 0)
+	if err := db.Gorm.Scopes(dao.LogsCond(&log)).
+		Count(&page.Total).Scopes(dao.Paginate(page)).Find(&logs).Error; err != nil {
+		panic(reply.DatabaseSqlParseError)
 	}
-	if logVO.Ip != "" {
-		session = session.Where("ip = ?", logVO.Ip)
-	}
-	if logVO.Url != "" {
-		session = session.Where("url like ?", "%"+logVO.Url+"%")
-	}
-	if logVO.Parameter != "" {
-		session = session.Where("parameter like ?", "%"+logVO.Parameter+"%")
-	}
-	if logVO.Device != "" {
-		session = session.Where("device like ?", "%"+logVO.Device+"%")
-	}
-	if logVO.Description != "" {
-		session = session.Where("description like ?", "%"+logVO.Description+"%")
-	}
-	if logVO.Code != "" {
-		session = session.Where("code = ?", logVO.Code)
-	}
-	if logVO.BrowserName != "" {
-		session = session.Where("browset_name like ?", "%"+logVO.BrowserName+"%")
-	}
-	if logVO.BrowserVersion != "" {
-		session = session.Where("browser_version = ?", logVO.BrowserVersion)
-	}
-	if logVO.CreateTime != nil {
-		session = session.Where("DATE_FORMAT( ? ,'%Y-%m-%d')=DATE_FORMAT(create_time, '%Y-%m-%d')", logVO.CreateTime)
-	}
-	session = session.Limit(pageutils.StartAndEnd(page))
-	var (
-		err     error
-		logsPOs = make([]po.AuthUserLog, 0)
-	)
-	if page.Total, err = session.FindAndCount(&logsPOs); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-	logVOs := make([]interface{}, 0)
-	for _, logPO := range logsPOs {
-		logVO := &vo.AuthUserLog{
-			Ip:             logPO.Ip,
-			CodeName:       constants.OperationNames[logPO.Code],
-			CreateTime:     &models.JSONTime{logPO.CreateTime},
-			Parameter:      logPO.Parameter,
-			UserId:         logPO.UserId,
-			RunTime:        logPO.RunTime,
-			BrowserName:    logPO.BrowserName,
-			BrowserVersion: logPO.BrowserVersion,
-			Device:         logPO.Device,
-			Description:    logPO.Description,
-			Url:            logPO.Url,
-		}
-		logVOs = append(logVOs, logVO)
-	}
-	reply.CreateJSONPaging(c, logVOs, page)
+	reply.CreateJSONPaging(c, model.Logs2Intefaces(logs), page)
 }

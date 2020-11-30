@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/closetool/blog/system/reply"
 	"github.com/closetool/blog/utils/collectionsutils"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
@@ -368,4 +370,21 @@ func failOnError(err error, msg string) {
 		logrus.Errorf("%s: %s", msg, err)
 		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
+}
+
+func SendRequest(queue string, data interface{}) (*reply.Reply, error) {
+	bts, err := jsoniter.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	rpl, err := Client.PublishOnQueueWaitReply(bts, queue)
+	if err != nil {
+		return nil, err
+	}
+
+	r := reply.Reply{}
+	if err := jsoniter.Unmarshal(rpl, &r); err != nil {
+		return nil, err
+	}
+	return &r, nil
 }

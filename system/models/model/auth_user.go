@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/closetool/blog/system/models"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/guregu/null"
 	uuid "github.com/satori/go.uuid"
 )
@@ -53,6 +55,8 @@ type AuthUser struct {
 	SocialID null.String `gorm:"column:social_id;type:varchar(255);size:255;" json:"socialId,omitempty" form:"socialId"` // 社交账户ID
 	//[ 2] password                                       varchar(255)         null: false  primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
 	Password string `gorm:"column:password;type:varchar(255);size:255;" json:"password,omitempty" form:"password"` // 密码
+
+	PasswordOld string `gorm:"-" json:"passwordOld,omitempty" form:"passwordOld"`
 	//[ 3] name                                           varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
 	Name null.String `gorm:"column:name;type:varchar(255);size:255;" json:"name,omitempty" form:"name"` // 别名
 	//[ 4] role_id                                        bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
@@ -64,17 +68,33 @@ type AuthUser struct {
 	//[ 7] avatar                                         varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
 	Avatar null.String `gorm:"column:avatar;type:varchar(255);size:255;" json:"avatar,omitempty" form:"avatar"` // 头像
 	//[ 8] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	CreateTime time.Time `gorm:"column:create_time;type:datetime;" json:"createTime,omitempty" form:"createTime"` // 注册时间
+	CreateTime int64 `gorm:"column:create_time;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"` // 注册时间
 	//[ 9] access_key                                     varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
 	AccessKey null.String `gorm:"column:access_key;type:varchar(255);size:255;" json:"accessKey,omitempty" form:"accessKey"` // ak
 	//[10] secret_key                                     varchar(255)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 255     default: []
 	SecretKey null.String `gorm:"column:secret_key;type:varchar(255);size:255;" json:"secretKey,omitempty" form:"secretKey"` // sk
 	//[11] status                                         int                  null: true   primary: false  isArray: false  auto: false  col: int             len: -1      default: [0]
-	Status null.Int `gorm:"column:status;type:int;default:0;" json:"status,omitempty" form:"status"` // 0 正常 1 锁定
+	Status null.Int `gorm:"column:status;type:int;default:0;not null;" json:"status,omitempty" form:"status"` // 0 正常 1 锁定
+
+	Token string `gorm:"-" json:"token,omitempty" form:"token"`
+
+	Roles []string `gorm:"-" json:"roles,omitempty" form:"roles"`
+
+	VerifyCode string `gorm:"-" json:"verifyCode,omitempty" form:"verifyCode"`
+
+	*jwt.StandardClaims `gorm:"-"`
+
+	*models.BaseVO
 
 	AuthToken AuthToken `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+}
 
-	AuthUserLog []AuthUserLog `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+func Users2Interfaces(users []AuthUser) []interface{} {
+	ints := make([]interface{}, len(users))
+	for i := range users {
+		ints[i] = users[i]
+	}
+	return ints
 }
 
 var auth_userTableInfo = &TableInfo{

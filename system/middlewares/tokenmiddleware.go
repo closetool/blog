@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/messaging"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/closetool/blog/system/reply"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
@@ -26,7 +26,7 @@ func UserToken(c *gin.Context) {
 		return
 	}
 	if bytes.Contains(rpl, []byte(reply.HandleErrCode(reply.Success))) {
-		user := vo.AuthUser{}
+		user := model.AuthUser{}
 		jsoniter.Get(rpl, "model").ToVal(&user)
 		c.Set("session", user)
 		c.Next()
@@ -54,7 +54,7 @@ func AdminToken(c *gin.Context) {
 		noPrivilege(c)
 		return
 	} else {
-		user := vo.AuthUser{}
+		user := model.AuthUser{}
 		jsoniter.Get(rpl, "model").ToVal(&user)
 		c.Set("session", user)
 		c.Next()

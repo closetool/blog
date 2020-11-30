@@ -43,16 +43,15 @@ type CategoryTags struct {
 	//[ 0] id                                             bigint               null: false  primary: true   isArray: false  auto: true   col: bigint          len: -1      default: []
 	ID int64 `gorm:"primaryKey;autoIncrement;column:id;" json:"id,omitempty" form:"id"`
 	//[ 1] tags_id                                        bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
-	TagsID int64 `gorm:"column:tags_id;type:bigint;" json:"tagsId,omitempty" form:"tagsId"` // 名称
+	TagsName string `gorm:"column:tags_id;type:varchar(32);size:32;" json:"tagsId,omitempty" form:"tagsId"` // 名称
 	//[ 2] category_id                                    bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
-	CategoryID int64 `gorm:"column:category_id;type:bigint;" json:"categoryId,omitempty" form:"categoryId"` // 分类的主键
+	CategoryName string `gorm:"column:category_id;type:varchar(32);size:32;" json:"categoryId,omitempty" form:"categoryId"` // 分类的主键
 	//[ 3] sort                                           smallint             null: false  primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
 	Sort int32 `gorm:"column:sort;type:smallint;default:0;" json:"sort,omitempty" form:"sort"` // 排序
 	//[ 4] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	CreateTime time.Time `gorm:"column:create_time;type:datetime;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"` // 创建时间
+	CreateTime int64 `gorm:"column:create_time;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"` // 创建时间
 	//[ 5] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	UpdateTime time.Time `gorm:"column:update_time;type:datetime;autoUpdateTime:milli;" json:"updateTime,omitempty" form:"updateTime"` // 更新时间
-
+	UpdateTime int64 `gorm:"column:update_time;autoUpdateTime:milli;" json:"updateTime,omitempty" form:"updateTime"` // 更新时间
 }
 
 var category_tagsTableInfo = &TableInfo{
@@ -193,9 +192,9 @@ func (c *CategoryTags) TableName() string {
 }
 
 // BeforeSave invoked before saving, return an error if field is not populated.
-func (c *CategoryTags) BeforeSave() error {
-	return nil
-}
+//func (c *CategoryTags) BeforeSave() error {
+//	return nil
+//}
 
 // Prepare invoked before saving, can be used to populate fields etc.
 func (c *CategoryTags) Prepare() {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/closetool/blog/system/models"
 	"github.com/guregu/null"
 	uuid "github.com/satori/go.uuid"
 )
@@ -57,9 +58,29 @@ type PostsComments struct {
 	//[ 6] tree_path                                      varchar(128)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 128     default: []
 	TreePath null.String `gorm:"column:tree_path;type:varchar(128);size:128;" json:"treePath,omitempty" form:"treePath"` // 层级结构
 	//[ 7] create_time                                    datetime             null: true   primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	CreateTime null.Time `gorm:"column:create_time;type:datetime;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"`
+	CreateTime int64 `gorm:"column:create_time;type:datetime;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"`
+
+	Title string `gorm:"-" json:"title" form:"title"`
+
+	AuthorAvatar string `gorm:"-" json:"authorAvatar" form:"authorAvatar"`
+
+	AuthorName string `gorm:"-" json:"authorName" form:"authorName"`
+
+	ParentUserName string `gorm:"-" json:"parentUserName" form:"parentUserName"`
 
 	ParentComments *PostsComments `gorm:"foreignKey:ParentID"`
+
+	Posts Posts `gorm:"foreignKey:PostsID;references:Posts.ID"`
+
+	*models.BaseVO
+}
+
+func Comments2Ints(comments []PostsComments) []interface{} {
+	ints := []interface{}{}
+	for i := range comments {
+		ints = append(ints, comments[i])
+	}
+	return ints
 }
 
 var posts_commentsTableInfo = &TableInfo{

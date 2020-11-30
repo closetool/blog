@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/closetool/blog/system/models"
 	"github.com/guregu/null"
 	uuid "github.com/satori/go.uuid"
 )
@@ -61,10 +62,19 @@ type AuthUserSocial struct {
 	//[ 7] is_home                                        smallint             null: true   primary: false  isArray: false  auto: false  col: smallint        len: -1      default: [0]
 	IsHome null.Int `gorm:"column:is_home;type:smallint;default:0;" json:"isHome,omitempty" form:"isHome"` // 是否主页社交信息
 	//[ 8] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	CreateTime time.Time `gorm:"column:create_time;type:datetime;autoCreateTime:milli" json:"createTime,omitempty" form:"createTime"` // 创建时间
+	CreateTime int64 `gorm:"column:create_time;autoCreateTime:milli" json:"createTime,omitempty" form:"createTime"` // 创建时间
 	//[ 9] update_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	UpdateTime time.Time `gorm:"column:update_time;type:datetime;autoUpdateTime:milli" json:"updateTime,omitempty" form:"updateTime"` // 更新时间
+	UpdateTime int64 `gorm:"column:update_time;autoUpdateTime:milli" json:"updateTime,omitempty" form:"updateTime"` // 更新时间
 
+	*models.BaseVO `gorm:"-"`
+}
+
+func Socials2Interfaces(socials []AuthUserSocial) []interface{} {
+	ints := make([]interface{}, len(socials))
+	for i, social := range socials {
+		ints[i] = social
+	}
+	return ints
 }
 
 var auth_user_socialTableInfo = &TableInfo{

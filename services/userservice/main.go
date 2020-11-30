@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/closetool/blog/services/userservice/models/po"
 	"github.com/closetool/blog/services/userservice/service"
 	"github.com/closetool/blog/services/userservice/service/amqp"
 	"github.com/closetool/blog/system/config"
@@ -20,8 +19,6 @@ import (
 var appName = "userservice"
 
 func main() {
-	//logrus.SetLevel(logrus.DebugLevel)
-
 	initial.InitConfig(appName)
 
 	config.LoadConfigurationFromBranch(
@@ -32,9 +29,6 @@ func main() {
 	)
 
 	initial.InitLog()
-
-	db.DbInit(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserSocial{})
-	db.SyncTables(&po.AuthUser{}, &po.AuthToken{}, &po.AuthUserSocial{})
 
 	db.GormInit()
 	db.Migrate(&model.AuthUser{}, &model.AuthToken{}, &model.AuthUserSocial{})

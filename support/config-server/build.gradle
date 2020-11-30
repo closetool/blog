@@ -10,8 +10,6 @@ buildscript {
         maven {
             url 'https://maven.aliyun.com/repository/spring/'
         }
-        mavenCentral()
-        mavenLocal()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")

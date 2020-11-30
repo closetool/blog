@@ -22,7 +22,7 @@ func GormInit() {
 }
 
 func Migrate(beans ...interface{}) {
-	if err := Gorm.AutoMigrate(beans...); err != nil {
+	if err := Gorm.Debug().Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(beans...); err != nil {
 		logrus.Debugln(err)
 		logrus.Panicf("can not migrate tables")
 	}

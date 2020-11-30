@@ -227,9 +227,9 @@ func (f *FriendshipLink) TableName() string {
 }
 
 // BeforeSave invoked before saving, return an error if field is not populated.
-func (f *FriendshipLink) BeforeSave() error {
-	return nil
-}
+//func (f *FriendshipLink) BeforeSave() error {
+//	return nil
+//}
 
 // Prepare invoked before saving, can be used to populate fields etc.
 func (f *FriendshipLink) Prepare() {

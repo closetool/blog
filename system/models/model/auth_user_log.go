@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/closetool/blog/system/models"
 	"github.com/guregu/null"
 	uuid "github.com/satori/go.uuid"
 )
@@ -65,12 +66,23 @@ type AuthUserLog struct {
 	//[ 8] run_time                                       bigint               null: false  primary: false  isArray: false  auto: false  col: bigint          len: -1      default: []
 	RunTime int64 `gorm:"column:run_time;type:bigint;" json:"runTime,omitempty" form:"runTime"` // 执行时间
 	//[ 9] create_time                                    datetime             null: false  primary: false  isArray: false  auto: false  col: datetime        len: -1      default: []
-	CreateTime time.Time `gorm:"column:create_time;type:datetime;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"` // 创建时间
+	CreateTime int64 `gorm:"column:create_time;type:datetime;autoCreateTime:milli;" json:"createTime,omitempty" form:"createTime"` // 创建时间
 	//[10] browser_name                                   varchar(100)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 100     default: []
 	BrowserName null.String `gorm:"column:browser_name;type:varchar(100);size:100;" json:"browserName,omitempty" form:"browserName"` // 浏览器名称
 	//[11] browser_version                                varchar(100)         null: true   primary: false  isArray: false  auto: false  col: varchar         len: 100     default: []
 	BrowserVersion null.String `gorm:"column:browser_version;type:varchar(100);size:100;" json:"browserVersion,omitempty" form:"browserVersion"` // 浏览器版本号
 
+	Count int64 `gorm:"-" json:"count" form:"count"`
+
+	*models.BaseVO `gorm:"-"`
+}
+
+func Logs2Intefaces(logs []AuthUserLog) []interface{} {
+	ints := make([]interface{}, 0, len(logs))
+	for _, log := range logs {
+		ints = append(ints, log)
+	}
+	return ints
 }
 
 var auth_user_logTableInfo = &TableInfo{

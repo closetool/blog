@@ -12,157 +12,126 @@ import (
 	"strings"
 	"time"
 
-	"github.com/closetool/blog/services/userservice/models/po"
-	"github.com/closetool/blog/services/userservice/models/vo"
 	"github.com/closetool/blog/services/userservice/utils"
 	"github.com/closetool/blog/system/constants"
 	"github.com/closetool/blog/system/db"
-	"github.com/closetool/blog/system/models"
+	"github.com/closetool/blog/system/models/dao"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/closetool/blog/system/reply"
 	"github.com/closetool/blog/utils/collectionsutils"
 	"github.com/closetool/blog/utils/pageutils"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"xorm.io/xorm"
+	"gorm.io/gorm"
 )
 
+//func Health(c *gin.Context) {
+//	if db.DB == nil {
+//		c.JSON(http.StatusOK, map[string]bool{"health": false})
+//	}
+//	c.JSON(http.StatusOK, map[string]bool{"health": true})
+//}
+
 func Health(c *gin.Context) {
-	if db.DB == nil {
+	if db.Gorm == nil {
 		c.JSON(http.StatusOK, map[string]bool{"health": false})
+		return
 	}
 	c.JSON(http.StatusOK, map[string]bool{"health": true})
 }
 
 func getUserInfo(c *gin.Context) {
 	value, _ := c.Get("session")
-	user, _ := value.(*po.AuthUser)
+	user, _ := value.(*model.AuthUser)
 	logrus.Debugf("user = %#v", user)
-	userVO := &vo.AuthUser{}
-	userVO.Status = user.Status
-	userVO.Roles = []string{constants.Roles[user.RoleId]}
-	userVO.Name = user.Name
-	userVO.CreateTime = &models.JSONTime{user.CreateTime}
-	userVO.Introduction = user.Introduction
-	userVO.Avatar = user.Avatar
-	userVO.Email = user.Email
-	c.JSON(http.StatusOK, reply.CreateWithModel(userVO))
+	user.Password = ""
+	user.PasswordOld = ""
+	user.Roles = []string{constants.Roles[user.RoleID]}
+	reply.CreateJSONModel(c, user)
 }
 
-func deleteUser(c *gin.Context, session *xorm.Session) error {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+func deleteUser(c *gin.Context, tx *gorm.DB) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
-	}
-	user := &po.AuthUser{Id: id}
-	ok, err := session.Get(user)
-	if !ok || err != nil {
-		reply.CreateJSONError(c, reply.AccountNotExist)
-		return err
+		logrus.Errorf("id converting failed: %v", err)
+		panic(reply.ParamError)
 	}
 
-	if user.RoleId != constants.RoleAdmin {
-		_, err := session.Delete(user)
-		c.JSON(http.StatusOK, reply.CreateWithSuccess())
-		return err
+	user, err := dao.GetAuthUser(tx, id)
+	if err != nil {
+		panic(reply.AccountNotExist)
+	}
+
+	if user.RoleID != constants.RoleAdmin {
+		_, err := dao.DeleteAuthUser(tx, id)
+		if err != nil {
+			panic(reply.DatabaseSqlParseError)
+		}
+		reply.CreateJSONsuccess(c)
+		return
 	}
 	reply.CreateJSONError(c, reply.Error)
-	return err
 }
 
-func saveAuthUserStatus(c *gin.Context, session *xorm.Session) error {
-	userVO := vo.CreateDefaultAuthUser()
-	err := c.ShouldBindJSON(userVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
+func saveAuthUserStatus(c *gin.Context, tx *gorm.DB) {
+	user := model.AuthUser{}
+	if err := c.ShouldBindJSON(&user); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
 
-	logrus.Debugf("user = %#v", userVO)
+	logrus.Debugf("user = %#v", user)
 
 	//将AuthUser中的数字属性默认值设置为-1
 	//避免默认值和真实值相冲突
-	if userVO.Id != -1 && userVO.Status != -1 {
-		count, err := session.Table(new(po.AuthUser)).ID(userVO.Id).
-			Where("role_id = ?", constants.RoleUser).
-			Update(map[string]interface{}{"status": userVO.Status})
-		logrus.Debugf("count = %v", count)
-		logrus.Debugf("err = %v", err)
-		if err == nil {
-			c.JSON(http.StatusOK, reply.CreateWithSuccess())
-			return nil
+	if user.ID != 0 && user.Status.Valid {
+		if err := tx.Where("id = ? and role_id = ?", user.ID, constants.RoleUser).Update("status", user.Status).Error; err != nil {
+			logrus.Errorf("update db failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
 		}
+		reply.CreateJSONsuccess(c)
+		return
 	}
-	reply.CreateJSONError(c, reply.Error)
-	return err
+	panic(reply.ParamError)
 }
 
 func getMasterUserInfo(c *gin.Context) {
-	user := &po.AuthUser{
-		RoleId: constants.RoleAdmin,
+	admin := model.AuthUser{}
+	if session := db.Gorm.First(&admin, "role_id = ?", constants.RoleAdmin); session.Error != nil {
+		logrus.Errorf("find db failed: %v", session.Error)
+		panic(reply.DatabaseSqlParseError)
+	} else if session.RowsAffected == 0 {
+		panic(reply.AccountNotExist)
 	}
-	ok, err := db.DB.Get(user)
-	if !ok || err != nil {
-		reply.CreateJSONError(c, reply.AccountNotExist)
-		return
-	}
-
-	userVO := &vo.AuthUser{
-		Name:         user.Name,
-		Introduction: user.Introduction,
-		Email:        user.Email,
-		Avatar:       user.Avatar,
-	}
-	c.JSON(http.StatusOK, reply.CreateWithModel(userVO))
+	reply.CreateJSONModel(c, admin)
 }
 
 func getUserList(c *gin.Context) {
-	userVO := vo.CreateDefaultAuthUser()
-	err := c.ShouldBindQuery(userVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return
+	user := model.AuthUser{}
+	if err := c.ShouldBindQuery(&user); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
-	page := pageutils.CheckAndInitPage(userVO.BaseVO)
-	logrus.Debugf("userVO = %#v", userVO)
+	page := pageutils.CheckAndInitPage(user.BaseVO)
+	logrus.Debugf("userVO = %#v", user)
 	logrus.Debugf("page = %#v", page)
 
-	session := db.DB.Table(new(po.AuthUser))
-	if userVO.BaseVO != nil && userVO.Keywords != "" {
-		logrus.Debugf("keywords = %s", userVO.Keywords)
-		session = session.Where("name like ?", "%"+userVO.Keywords+"%")
-	}
-	if userVO.Name != "" {
-		session = session.Where("name = ?", userVO.Name)
-	}
-	if userVO.Status != -1 {
-		session = session.Where("status = ?", userVO.Status)
-	}
-	session = session.Limit(pageutils.StartAndEnd(page))
+	users := make([]model.AuthUser, 0)
 
-	users := make([]*po.AuthUser, 0)
-	count, err := session.FindAndCount(&users)
-	if err != nil {
-		logrus.Errorf("when selecting in database, an error occurred: %v", err)
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+	if err := db.Gorm.
+		Scopes(dao.UserCond(&user)).
+		Count(&page.Total).
+		Scopes(dao.Paginate(page)).
+		Find(&users).Error; err != nil {
+		panic(reply.DatabaseSqlParseError)
 	}
-	page.Total = count
 
-	userVOs := make([]interface{}, 0)
-	for _, user := range users {
-		tmp := &vo.AuthUser{
-			Id:           user.Id,
-			Status:       user.Status,
-			Name:         user.Name,
-			RoleId:       user.RoleId,
-			Introduction: user.Introduction,
-		}
-		userVOs = append(userVOs, tmp)
+	for i := range users {
+		users[i].Password = ""
 	}
-	c.JSON(http.StatusOK, reply.CreateWithPaging(userVOs, page))
+	ints := model.Users2Interfaces(users)
+	reply.CreateJSONPaging(c, ints, page)
 }
 
 func oathLoginByGithub(c *gin.Context) {
@@ -171,429 +140,324 @@ func oathLoginByGithub(c *gin.Context) {
 	c.PureJSON(http.StatusOK, reply.CreateWithModel(map[string]string{"authorizeUrl": url}))
 }
 
-func saveUserByGithub(c *gin.Context, session *xorm.Session) error {
-	userVO := &vo.AuthUser{}
-	err := c.ShouldBindJSON(&userVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		logrus.Errorf("save user by github parameters error: %v", err)
-		return err
+func saveUserByGithub(c *gin.Context, tx *gorm.DB) {
+	user := model.AuthUser{}
+	if err := c.ShouldBindJSON(&user); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
 
-	user := new(po.AuthUser)
-	ok, err := session.Where("social_id = ?", userVO.SocialId).Get(user)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		logrus.Errorf("get user by social_id failed: %v", err)
-		return err
-	}
-	hs := hmac.New(md5.New, collectionsutils.RandomString(32))
-	if !ok {
-		userPO := po.AuthUser{
-			SocialId: userVO.SocialId,
-			Avatar:   userVO.Avatar,
-			Name:     userVO.Name,
-			RoleId:   constants.RoleUser,
-			Password: hex.EncodeToString(hs.Sum([]byte(userVO.SocialId))),
+	if err := tx.First(&user, "social_id = ?", user.SocialID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			//数据库中不存在，插入相应数据
+			hs := hmac.New(md5.New, collectionsutils.RandomString(32))
+			user.Password = hex.EncodeToString(hs.Sum([]byte(user.SocialID.String)))
+			user.RoleID = constants.RoleUser
+			if err := tx.Create(&user).Error; err != nil {
+				logrus.Errorf("can not insert a user: %v", user)
+				panic(reply.DatabaseSqlParseError)
+			}
+		} else {
+			logrus.Errorf("find user from db failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
 		}
-		_, err := session.InsertOne(&userPO)
-		if err != nil {
-			reply.CreateJSONError(c, reply.Error)
-			logrus.Errorf("insert into %s failed: %v", userPO.TableName(), err)
-			return err
-		}
-
-		user.Name = userPO.Name
-		user.Password = userPO.Password
-		user.Id = userPO.Id
-		user.CreateTime = userPO.CreateTime
-
 	} else {
-		if user.Status == constants.AccountLocked {
-			reply.CreateJSONError(c, reply.LoginDisable)
-			return nil
+		//数据库中存在，应该检查status判断是否能登录
+		if user.Status.Int64 == constants.AccountLocked {
+			logrus.Infof("account %s has been locked", user.SocialID.String)
+			panic(reply.LoginDisable)
 		}
 	}
 
-	token, err, expire := utils.GenerateToken(user)
+	token, err, expire := utils.GenerateToken(&user)
 	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
 		logrus.Errorf("generate token failed: %v", err)
+		panic(reply.Error)
 	}
-
-	userVO.CreateTime = &models.JSONTime{user.CreateTime}
-	userVO.Token = token
+	user.Token = token
 
 	//TODO:将修改存入数据库改为存入redis
-	userToken := &po.AuthToken{
-		UserId:     user.Id,
+	userToken := model.AuthToken{
+		UserID:     user.ID,
 		Token:      token,
 		ExpireTime: time.Unix(expire, 0),
 	}
-	_, err = session.InsertOne(userToken)
-	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		logrus.Errorf("Insert token failed: %v", err)
-		return err
+	if _, _, err := dao.AddAuthToken(tx, &userToken); err != nil {
+		logrus.Errorf("insert token failed: %v", err)
+		panic(reply.Error)
 	}
-	reply.CreateJSONModel(c, userVO)
-	return nil
+	reply.CreateJSONModel(c, user)
 }
 
-func registerAdminByGithub(c *gin.Context, session *xorm.Session) error {
-	userVO := vo.CreateDefaultAuthUser()
-	err := c.ShouldBindJSON(userVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		logrus.Errorf("could not bind parameters: %v", err)
-		return err
+func registerAdminByGithub(c *gin.Context, tx *gorm.DB) {
+	user := model.AuthUser{}
+	if err := c.ShouldBindJSON(&user); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
 
-	admin := &po.AuthUser{}
-	ok, err := session.Where("role_id = ?", constants.RoleAdmin).Get(admin)
-	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		logrus.Errorf("select admin from db failed: %v", err)
-		return err
-	}
+	admin := model.AuthUser{}
 
-	passwdHash := fmt.Sprintf("%x", sha256.Sum256([]byte(userVO.Password)))
-
-	if !ok {
-		userPO := &po.AuthUser{
-			Name:     userVO.Email,
-			Email:    userVO.Email,
-			RoleId:   constants.RoleAdmin,
-			Password: fmt.Sprintf("%x", md5.Sum([]byte(passwdHash))),
-		}
-		_, err := session.InsertOne(userPO)
-		if err != nil {
-			reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-			logrus.Errorf("insert admin from db failed: %v", err)
-			return err
+	if err := tx.First(&admin, "role_id = ?", constants.RoleAdmin).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			logrus.Errorf("get admin account failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
 		}
 	} else {
-		reply.CreateJSONError(c, reply.AccountExist)
-		return nil
+		panic(reply.AccountExist)
 	}
 
+	passwdHash := fmt.Sprintf("%x", sha256.Sum256([]byte(user.Password)))
+
+	user.Name = user.Email
+	user.Password = fmt.Sprintf("%x", md5.Sum([]byte(passwdHash)))
+	user.RoleID = constants.RoleAdmin
+
+	if _, _, err := dao.AddAuthUser(tx, &user); err != nil {
+		panic(reply.DatabaseSqlParseError)
+	}
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
-func login(c *gin.Context) {
-	userVO := &vo.AuthUser{}
-	err := c.BindJSON(userVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		logrus.Errorf("could not bind parameters: %v", err)
-		return
+func login(c *gin.Context, tx *gorm.DB) {
+	user := model.AuthUser{}
+	if err := c.ShouldBindJSON(&user); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
 
-	admin := &po.AuthUser{}
-	ok, err := db.DB.Where("role_id=? and email = ?", constants.RoleAdmin, userVO.Email).
-		Get(admin)
+	admin := model.AuthUser{}
 
-	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		logrus.Errorf("select from database failed: %v", err)
-		return
-	}
-
-	if !ok {
-		reply.CreateJSONError(c, reply.AccountNotExist)
-		return
-	} else {
-		psw := fmt.Sprintf("%x", md5.Sum([]byte(userVO.Password)))
-		if strings.EqualFold(admin.Password, psw) {
-			token, err, expire := utils.GenerateToken(admin)
-			if err != nil {
-				reply.CreateJSONError(c, reply.Error)
-				logrus.Errorf("generate token failed: %v", err)
-			}
-
-			userVO.Roles = []string{constants.Roles[admin.RoleId]}
-			userVO.Token = token
-
-			//TODO:将修改存入数据库改为存入redis
-			userToken := &po.AuthToken{
-				UserId:     admin.Id,
-				Token:      token,
-				ExpireTime: time.Unix(expire, 0),
-			}
-			_, err = db.DB.InsertOne(userToken)
-			if err != nil {
-				reply.CreateJSONError(c, reply.Error)
-				logrus.Errorf("Insert token failed: %v", err)
-				return
-			}
-		} else {
-			reply.CreateJSONError(c, reply.PasswordError)
-			return
+	if err := tx.Where("role_id = ? and email = ?", constants.RoleAdmin, user.Email).First(&admin).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			panic(reply.AccountNotExist)
 		}
+		logrus.Errorf("get admin failed: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
 
-	reply.CreateJSONModel(c, userVO)
+	psw := fmt.Sprintf("%x", md5.Sum([]byte(user.Password)))
+	if strings.EqualFold(admin.Password, psw) {
+		token, err, expire := utils.GenerateToken(&admin)
+		if err != nil {
+			logrus.Errorf("generate token failed: %v", err)
+			panic(reply.Error)
+		}
 
+		user.Roles = []string{constants.Roles[admin.RoleID]}
+		user.Token = token
+
+		//TODO:将修改存入数据库改为存入redis
+		userToken := model.AuthToken{
+			UserID:     admin.ID,
+			Token:      token,
+			ExpireTime: time.Unix(expire, 0),
+		}
+		if _, _, err := dao.AddAuthToken(tx, &userToken); err != nil {
+			logrus.Errorf("save token failed: %v", err)
+			panic(reply.DatabaseSqlParseError)
+		}
+		reply.CreateJSONModel(c, user)
+	} else {
+		panic(reply.PasswordError)
+	}
 }
 
-func updatePassword(c *gin.Context, session *xorm.Session) error {
-	userVO := &vo.AuthUser{}
-	err := c.BindJSON(userVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		logrus.Errorf("could not bind parameters: %v", err)
-		return err
+func updatePassword(c *gin.Context, tx *gorm.DB) {
+	user := model.AuthUser{}
+	if err := c.ShouldBindJSON(&user); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
 
 	s, _ := c.Get("session")
-	admin, ok := s.(*po.AuthUser)
+	admin, ok := s.(*model.AuthUser)
 	if !ok {
-		reply.CreateJSONError(c, reply.Error)
+		panic(reply.Error)
 	}
 
-	psw := fmt.Sprintf("%x", md5.Sum([]byte(userVO.PasswordOld)))
+	psw := fmt.Sprintf("%x", md5.Sum([]byte(user.PasswordOld)))
 
 	if !strings.EqualFold(admin.Password, psw) {
-		reply.CreateJSONError(c, reply.PasswordError)
-		return nil
+		panic(reply.PasswordError)
 	}
 
-	_, err = session.Table(&po.AuthUser{}).ID(admin.Id).
-		Update(map[string]string{
-			"password": fmt.Sprintf("%x", md5.Sum([]byte(userVO.Password))),
-		})
-
-	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-	} else {
-		reply.CreateJSONsuccess(c)
+	if err := tx.Model(&model.AuthUser{}).Update("password", fmt.Sprintf("%x", md5.Sum([]byte(user.Password)))); err != nil {
+		logrus.Errorf("can not update password: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
-	return err
+	reply.CreateJSONsuccess(c)
 }
 
-func updateAdmin(c *gin.Context, session *xorm.Session) error {
-	userVO := &vo.AuthUser{}
-	err := c.BindJSON(userVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		logrus.Errorf("could not bind parameters: %v", err)
-		return err
+func updateAdmin(c *gin.Context, tx *gorm.DB) {
+	user := model.AuthUser{}
+	if err := c.ShouldBindJSON(&user); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
 
 	s, exist := c.Get("session")
-	admin, ok := s.(*po.AuthUser)
+	admin, ok := s.(*model.AuthUser)
 	if !exist || !ok {
-		reply.CreateJSONError(c, reply.AccountNotExist)
-		return nil
+		panic(reply.InvalidToken)
 	}
 
-	userPO := &po.AuthUser{
-		Email:        userVO.Email,
-		Avatar:       userVO.Avatar,
-		Name:         userVO.Name,
-		Introduction: userVO.Introduction,
+	m := map[string]interface{}{}
+	if user.Email.Valid {
+		m["email"] = user.Email.String
+	}
+	if user.Avatar.Valid {
+		m["avatar"] = user.Avatar.String
+	}
+	if user.Name.Valid {
+		m["name"] = user.Name.String
+	}
+	if user.Introduction.Valid {
+		m["name"] = user.Introduction.String
 	}
 
-	if count, err := session.ID(admin.Id).
-		Cols("email", "avatar", "name", "introduction").
-		Update(userPO); err != nil || count == 0 {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
-	}
-	reply.CreateJSONsuccess(c)
-	return nil
-}
-
-func updateUser(c *gin.Context, session *xorm.Session) error {
-	userVO := &vo.AuthUser{}
-	if err := contextBindAuthUser(c, userVO); err != nil {
-		return err
-	}
-
-	if userVO.Id == 0 {
-		reply.CreateJSONError(c, reply.ParamError)
-		return nil
-	}
-
-	userPO := &po.AuthUser{
-		Email:        userVO.Email,
-		Avatar:       userVO.Avatar,
-		Name:         userVO.Name,
-		Introduction: userVO.Introduction,
-		Status:       userVO.Status,
-	}
-	if count, err := session.ID(userVO.Id).
-		Cols("email", "avatar", "name", "introduction", "status").
-		Update(userPO); count == 0 || err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
+	if err := tx.Model(&user).Where("id = ?", admin.ID).Updates(m).Error; err != nil {
+		logrus.Errorf("update admin profile failed: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
 
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
-func contextBindAuthUser(c *gin.Context, userVO *vo.AuthUser) error {
-	err := c.BindJSON(userVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		logrus.Errorf("could not bind parameters: %v", err)
-		return err
+func updateUser(c *gin.Context, tx *gorm.DB) {
+	user := model.AuthUser{}
+	if err := c.ShouldBindJSON(&user); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
-	return nil
+
+	if user.ID == 0 {
+		panic(reply.ParamError)
+	}
+
+	m := map[string]interface{}{}
+	if user.Email.Valid {
+		m["email"] = user.Email.String
+	}
+	if user.Avatar.Valid {
+		m["avatar"] = user.Avatar.String
+	}
+	if user.Name.Valid {
+		m["name"] = user.Name.String
+	}
+	if user.Introduction.Valid {
+		m["name"] = user.Introduction.String
+	}
+
+	if user.Status.Valid {
+		m["status"] = user.Status.Int64
+	}
+
+	if err := tx.Model(&model.AuthUser{}).Where("id = ?", user.ID).Updates(m).Error; err != nil {
+		logrus.Errorf("update user failed: %v", err)
+		panic(reply.DatabaseSqlParseError)
+	}
+
+	reply.CreateJSONsuccess(c)
 }
 
-func logout(c *gin.Context, session *xorm.Session) error {
+func logout(c *gin.Context, tx *gorm.DB) {
 	//TODO:修改为删除redis缓存
-	return nil
+	reply.CreateJSONsuccess(c)
 }
 
 func getAvatar(c *gin.Context) {
-	userPO := *&po.AuthUser{}
-	if count, err := db.DB.Where("role_id = ?", constants.RoleAdmin).
-		Get(userPO); count == false || err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
+	user := model.AuthUser{}
+
+	if err := db.Gorm.Where("role_id = ?", constants.RoleAdmin).First(&user).Error; err != nil {
+		logrus.Errorf("can not get admin: %v", err)
+		panic(reply.DatabaseSqlParseError)
+	}
+
+	if !user.Avatar.Valid {
+		c.Data(http.StatusOK, "image/jpg", []byte{})
 		return
 	}
 
-	resp, err := http.Get(userPO.Avatar)
+	resp, err := http.Get(user.Avatar.String)
 	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return
+		panic(reply.Error)
 	}
 	defer resp.Body.Close()
 
 	bytes, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		reply.CreateJSONError(c, reply.Error)
-		return
+		panic(reply.Error)
 	}
-
 	c.Data(http.StatusOK, resp.Header.Get("Content-Type"), bytes)
 }
 
-func saveSocial(c *gin.Context, session *xorm.Session) error {
-	socialVO := &vo.AuthUserSocial{}
-	err := c.BindJSON(socialVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
+func saveSocial(c *gin.Context, tx *gorm.DB) {
+	social := model.AuthUserSocial{}
+	if err := c.ShouldBindJSON(&social); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
+	}
+	logrus.Debugf("social = %#v", social)
+
+	if social.Code == "" {
+		panic(reply.ParamError)
 	}
 
-	logrus.Debugf("social = %#v", socialVO)
-
-	if socialVO.Code == "" {
-		reply.CreateJSONError(c, reply.ParamError)
-		return nil
+	if _, _, err := dao.AddAuthUserSocial(tx, &social); err != nil {
+		logrus.Errorf("can not add social: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
-
-	socialPO := &po.AuthUserSocial{
-		Code:      socialVO.Code,
-		ShowType:  socialVO.ShowType,
-		Content:   socialVO.Content,
-		Remark:    socialVO.Remark,
-		Icon:      socialVO.Icon,
-		IsEnabled: socialVO.IsEnabled,
-		IsHome:    socialVO.IsHome,
-	}
-
-	if count, err := session.InsertOne(socialPO); count == 0 || err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
-func editSocial(c *gin.Context, session *xorm.Session) error {
-	socialVO := &vo.AuthUserSocial{}
-	err := c.BindJSON(socialVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
+func editSocial(c *gin.Context, tx *gorm.DB) {
+	social := model.AuthUserSocial{}
+	if err := c.ShouldBindJSON(&social); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
 
-	if socialVO.Id == 0 {
-		reply.CreateJSONError(c, reply.ParamError)
-		return nil
+	if social.ID == 0 {
+		panic(reply.ParamError)
 	}
 
-	socialPO := &po.AuthUserSocial{
-		Code:      socialVO.Code,
-		ShowType:  socialVO.ShowType,
-		Content:   socialVO.Content,
-		Remark:    socialVO.Remark,
-		Icon:      socialVO.Icon,
-		IsEnabled: socialVO.IsEnabled,
-		IsHome:    socialVO.IsHome,
+	if _, _, err := dao.UpdateAuthUserSocial(tx, social.ID, &social); err != nil {
+		logrus.Errorf("can not update social: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
-	if count, err := session.ID(socialVO.Id).AllCols().
-		Update(socialPO); count == 0 || err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
 func getSocial(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return
+		logrus.Errorf("id converting failed: %v", err)
+		panic(reply.ParamError)
 	}
 
-	socialPO := &po.AuthUserSocial{}
-	ok, err := db.DB.ID(id).Get(socialPO)
-	if !ok || err != nil {
-		logrus.Debugf("selecting from db failed: %v", err)
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+	social := model.AuthUserSocial{}
+	if err := db.Gorm.First(&social, id).Error; err != nil {
+		logrus.Errorf("can not get social: %v", social)
+		panic(reply.DatabaseSqlParseError)
 	}
-
-	social := &vo.AuthUserSocial{
-		Id:         socialPO.Id,
-		Code:       socialPO.Code,
-		Content:    socialPO.Content,
-		ShowType:   socialPO.ShowType,
-		Remark:     socialPO.Remark,
-		Icon:       socialPO.Icon,
-		IsEnabled:  socialPO.IsEnabled,
-		IsHome:     socialPO.IsHome,
-		CreateTime: &models.JSONTime{socialPO.CreateTime},
-		UpdateTime: &models.JSONTime{socialPO.UpdateTime},
-	}
-
 	reply.CreateJSONModel(c, social)
 	return
 }
 
-func delSocial(c *gin.Context, session *xorm.Session) error {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+func delSocial(c *gin.Context, tx *gorm.DB) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
-		return err
+		logrus.Errorf("id converting failed: %v", err)
+		panic(reply.ParamError)
 	}
 
-	if count, err := session.ID(id).Delete(&po.AuthUserSocial{}); count == 0 || err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return err
+	if _, err := dao.DeleteAuthUserSocial(tx, id); err != nil {
+		logrus.Errorf("can not delete social: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
-
 	reply.CreateJSONsuccess(c)
-	return nil
 }
 
 func getSocialList(c *gin.Context) {
@@ -604,96 +468,41 @@ func getSocialEnableList(c *gin.Context) {
 	socialList(c, 1)
 }
 
-func getSocialInfo(c *gin.Context) {
-	socialVOs := make([]interface{}, 0)
-	socialPOs := make([]*po.AuthUserSocial, 0)
-	err := db.DB.Where("is_enabled = ? and is_home = ?", constants.SocialEnabled, constants.SocialIsHome).
-		Find(&socialPOs)
-	if err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
-	}
-
-	for _, socialPO := range socialPOs {
-		social := vo.AuthUserSocial{
-			Id:         socialPO.Id,
-			Code:       socialPO.Code,
-			Content:    socialPO.Content,
-			ShowType:   socialPO.ShowType,
-			Remark:     socialPO.Remark,
-			Icon:       socialPO.Icon,
-			IsEnabled:  socialPO.IsEnabled,
-			IsHome:     socialPO.IsHome,
-			CreateTime: &models.JSONTime{socialPO.CreateTime},
-			UpdateTime: &models.JSONTime{socialPO.UpdateTime},
-		}
-		socialVOs = append(socialVOs, social)
-	}
-	reply.CreateJSONModels(c, socialVOs)
-}
-
-func socialList(c *gin.Context, enabled int) {
-	socialVO := &vo.AuthUserSocial{IsEnabled: -1, IsHome: -1}
-	err := c.BindQuery(socialVO)
-	if err != nil {
-		reply.CreateJSONError(c, reply.ParamError)
+func socialList(c *gin.Context, enabled int32) {
+	social := model.AuthUserSocial{IsEnabled: -1}
+	if err := c.ShouldBindQuery(&social); err != nil {
+		logrus.Errorf("can not parse params: %v", err)
+		panic(reply.ParamError)
 	}
 
 	if enabled == 1 {
-		socialVO.IsEnabled = enabled
+		social.IsEnabled = enabled
 	}
 
-	page := pageutils.CheckAndInitPage(socialVO.BaseVO)
-	session := db.DB.NewSession()
+	page := pageutils.CheckAndInitPage(social.BaseVO)
 
-	if socialVO.BaseVO != nil && socialVO.Keywords != "" {
-		session = session.Where("code like ?", "%"+socialVO.Keywords+"%")
-	}
-	if socialVO.Code != "" {
-		session = session.Where("code = ?", socialVO.Code)
-	}
-	if socialVO.Content != "" {
-		session = session.Where("content = ?", socialVO.Content)
-	}
-	if socialVO.ShowType != 0 {
-		session = session.Where("show_type = ?", socialVO.ShowType)
-	}
-	if socialVO.Remark != "" {
-		session = session.Where("remark = ?", socialVO.Remark)
-	}
-	if socialVO.IsEnabled != -1 {
-		session = session.Where("is_enabled = ?", socialVO.IsEnabled)
-	}
-	if socialVO.IsHome != -1 {
-		session = session.Where("is_home = ?", socialVO.IsHome)
-	}
-	session = session.Limit(pageutils.StartAndEnd(page))
-	session = session.OrderBy("id")
+	socials := make([]model.AuthUserSocial, 0)
 
-	lists := make([]po.AuthUserSocial, 0)
-	if err = session.Find(&lists); err != nil {
-		reply.CreateJSONError(c, reply.DatabaseSqlParseError)
-		return
+	if err := db.Gorm.Scopes(dao.SocialCond(&social)).Count(&page.Total).Scopes(dao.Paginate(page)).Find(&socials).Error; err != nil {
+		logrus.Errorf("can not get social list: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
 
-	results := make([]interface{}, 0)
-	for _, socialPO := range lists {
-		social := vo.AuthUserSocial{
-			Id:         socialPO.Id,
-			Code:       socialPO.Code,
-			Content:    socialPO.Content,
-			ShowType:   socialPO.ShowType,
-			Remark:     socialPO.Remark,
-			Icon:       socialPO.Icon,
-			IsEnabled:  socialPO.IsEnabled,
-			IsHome:     socialPO.IsHome,
-			CreateTime: &models.JSONTime{socialPO.CreateTime},
-			UpdateTime: &models.JSONTime{socialPO.UpdateTime},
-		}
-		results = append(results, social)
+	ints := model.Socials2Interfaces(socials)
+
+	reply.CreateJSONPaging(c, ints, page)
+}
+
+func getSocialInfo(c *gin.Context) {
+	socials := make([]model.AuthUserSocial, 0)
+
+	if err := db.Gorm.Where("is_enabled = ? and is_home = ?", constants.SocialEnabled, constants.SocialIsHome).Find(&socials).Error; err != nil {
+		logrus.Errorf("can not get socials: %v", err)
+		panic(reply.DatabaseSqlParseError)
 	}
 
-	reply.CreateJSONPaging(c, results, page)
+	ints := model.Socials2Interfaces(socials)
+	reply.CreateJSONModels(c, ints)
 }
 
 func sendEmail(c *gin.Context) {

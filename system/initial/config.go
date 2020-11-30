@@ -25,7 +25,7 @@ func InitConfig(appName string) {
 		viper.AddConfigPath(loc)
 	}
 
-	logrus.Infof("service will read musicservice.yml configuration file from %s", strings.Join(configLoc, ","))
+	logrus.Infof("service will read %s.yml or config.yml configuration file from %s", appName, strings.Join(configLoc, ","))
 
 	_ = viper.ReadInConfig()
 	//if err != nil {
