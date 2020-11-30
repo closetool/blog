@@ -22,17 +22,11 @@ before_install:
     - docker swarm init
 
 before_script:
-    - docker network create -d overlay my_network
-    - chmod a+x ./support/config-server/gradlew
     - chmod a+x ./*.sh
     - chmod a+x ./scripts/*.sh
 
 script: 
-    - ./mysql.sh
-    - ./support.sh
-    - ./springcloud.sh
-    - ./nginx.sh
-    - cd scripts && ./universal.sh `cat services.txt`
+    - cd scripts && ./build.sh `cat services.txt`
 
 # after_success: 
 #     - docker tag closetool/configserver registry.cn-hangzhou.aliyuncs.com/closetool/configserver

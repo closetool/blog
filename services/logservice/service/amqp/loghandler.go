@@ -1,13 +1,12 @@
 package amqp
 
 import (
-	"strconv"
-
-	"github.com/closetool/blog/services/logservice/models/po"
-	"github.com/closetool/blog/services/logservice/models/vo"
 	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/messaging"
+	"github.com/closetool/blog/system/models/dao"
+	"github.com/closetool/blog/system/models/model"
 	"github.com/closetool/blog/system/reply"
+	"github.com/guregu/null"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
@@ -15,44 +14,33 @@ import (
 
 func SaveLogs() {
 	messaging.Client.SubscribeToQueue("logs.saveLogs", "logs.saveLogs", func(d amqp.Delivery) {
-		logsVO := vo.AuthUserLog{}
-		if err := jsoniter.Unmarshal(d.Body, &logsVO); err != nil {
+		log := model.AuthUserLog{}
+		if err := jsoniter.Unmarshal(d.Body, &log); err != nil {
 			logrus.Errorf("while unmarshal message body, encounterd an error: %v", err)
 		}
-		logsPO := &po.AuthUserLog{
-			Description:    logsVO.Description,
-			Device:         logsVO.Device,
-			Parameter:      logsVO.Parameter,
-			Url:            logsVO.Url,
-			Code:           logsVO.Code,
-			UserId:         logsVO.UserId,
-			RunTime:        logsVO.RunTime,
-			BrowserName:    logsVO.BrowserName,
-			BrowserVersion: logsVO.BrowserVersion,
-		}
-		db.DB.InsertOne(logsPO)
+		dao.AddAuthUserLog(db.Gorm, &log)
 	})
 }
 
 func GetParamGroupByCode() {
 	messaging.Client.SubscribeToQueueAndReply("logs.getParamGroupByCode", "logs.getParamGroupByCode", func(d amqp.Delivery) []byte {
-		params, err := db.DB.SQL("select parameter,count(1) as count from closetool_auth_user_log where code = ? group by parameter", string(d.Body)).QueryString()
+		rows, err := db.Gorm.
+			Raw("select parameter,count(1) as count from closetool_auth_user_log where code = ? group by parameter", string(d.Body)).Rows()
 		if err != nil {
 			return reply.ErrorBytes(reply.DatabaseSqlParseError)
 		}
-		logrus.Debugf("%#v", params)
-		logVOs := make([]interface{}, 0)
-		for _, obj := range params {
-			count, err := strconv.ParseInt(obj["count"], 10, 64)
-			if err != nil {
-				return reply.ErrorBytes(reply.Error)
-			}
-			logVOs = append(logVOs, vo.AuthUserLog{
-				Parameter: obj["parameter"],
+		logrus.Debugf("%#v", rows)
+		logs := make([]interface{}, 0)
+		for rows.Next() {
+			param := ""
+			count := int64(0)
+			rows.Scan(&param, &count)
+			logs = append(logs, model.AuthUserLog{
+				Parameter: null.StringFrom(param),
 				Count:     count,
 			})
 		}
-		logrus.Debugf("%#v", logVOs)
-		return reply.ModelsBytes(logVOs)
+		logrus.Debugf("%#v", logs)
+		return reply.ModelsBytes(logs)
 	})
 }

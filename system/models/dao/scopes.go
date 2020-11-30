@@ -168,3 +168,39 @@ func CommentsCond(c *model.PostsComments) func(*gorm.DB) *gorm.DB {
 		return DB
 	}
 }
+
+func LogsCond(l *model.AuthUserLog) func(*gorm.DB) *gorm.DB {
+	return func(DB *gorm.DB) *gorm.DB {
+		if l.UserID != "" {
+			DB = DB.Where("user_id = ?", l.UserID)
+		}
+		if l.IP != "" {
+			DB = DB.Where("ip = ?", l.IP)
+		}
+		if l.URL != "" {
+			DB = DB.Where("url like ?", surround(l.URL))
+		}
+		if l.Parameter.Valid {
+			DB = DB.Where("parameter like ?", surround(l.Parameter.String))
+		}
+		if l.Device.Valid {
+			DB = DB.Where("device like ?", surround(l.Device.String))
+		}
+		if l.Description.Valid {
+			DB = DB.Where("description like ?", surround(l.Description.String))
+		}
+		if l.Code.Valid {
+			DB = DB.Where("code = ?", surround(l.Code.String))
+		}
+		if l.BrowserName.Valid {
+			DB = DB.Where("browset_name like ?", surround(l.BrowserName.String))
+		}
+		if l.BrowserVersion.Valid {
+			DB = DB.Where("browser_version = ?", surround(l.BrowserName.String))
+		}
+		if l.CreateTime != 0 {
+			DB = DB.Where("FROM_UNIXTIME( ? ,'%Y-%m-%d')=FROM_UNIXTIME(create_time, '%Y-%m-%d')", l.CreateTime)
+		}
+		return DB
+	}
+}

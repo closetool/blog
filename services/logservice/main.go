@@ -3,11 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/closetool/blog/services/logservice/models/po"
 	"github.com/closetool/blog/services/logservice/service"
 	"github.com/closetool/blog/services/logservice/service/amqp"
 	"github.com/closetool/blog/system/config"
-	"github.com/closetool/blog/system/db"
 	"github.com/closetool/blog/system/exit"
 	"github.com/closetool/blog/system/initial"
 	"github.com/closetool/blog/system/messaging"
@@ -31,9 +29,6 @@ func main() {
 	)
 
 	initial.InitLog()
-
-	db.DbInit(&po.AuthUserLog{})
-	db.SyncTables(&po.AuthUserLog{})
 
 	r := initial.InitServer()
 	routeutils.RegisterRoute(service.LogRoutes, r.Group("/logs"))

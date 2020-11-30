@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/closetool/blog/services/postsservice/models/po"
 	"github.com/closetool/blog/services/postsservice/service"
 	"github.com/closetool/blog/services/postsservice/service/amqp"
 	"github.com/closetool/blog/system/config"
@@ -32,9 +31,6 @@ func main() {
 	viper.Set("log_level", fmt.Sprintf("%d", logrus.DebugLevel))
 
 	initial.InitLog()
-
-	db.DbInit(&po.Posts{}, &po.PostsTags{}, &po.PostsAttribute{}, &po.PostsComments{})
-	db.SyncTables(&po.Posts{}, &po.PostsTags{}, &po.PostsAttribute{}, &po.PostsComments{})
 
 	db.GormInit()
 	db.Migrate(&model.Posts{}, &model.PostsTags{}, &model.PostsAttribute{}, &model.PostsComments{})
